@@ -168,7 +168,8 @@ lemma chartAt_invFun_tangent_eq_toEuclidTangent (x : TangentBundle I Configurati
     toEuclidTangent.symm := by
   ext1 p
   obtain ⟨p', rfl⟩ := toEuclidTangent.surjective p
-  simp
+  simp only [OpenPartialHomeomorph.symm_toPartialEquiv, OpenPartialHomeomorph.coe_coe_symm,
+    Equiv.symm_apply_apply]
   refine (OpenPartialHomeomorph.eq_symm_apply _ ?_ ?_).mp ?_
   · simp only [OpenPartialHomeomorph.symm_toPartialEquiv, PartialEquiv.symm_source]
     rw [TangentBundle.mem_chart_target_iff]
