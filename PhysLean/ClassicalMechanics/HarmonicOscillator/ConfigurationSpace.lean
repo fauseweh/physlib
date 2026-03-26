@@ -46,6 +46,10 @@ lemma ext {x y : ConfigurationSpace} (h : x.val = y.val) : x = y := by
 
 ## The manifold structure on the configuration space
 
+On `ConfigurationSpace`, we induce an instance of a topological space,
+a charted space, and a smooth manifold structure from the equivalence `toEuclid` with
+`EuclideanSpace ℝ (Fin 1)`.
+
 -/
 
 /-- Linear map sending a configuration space element to its underlying real value. -/
@@ -55,10 +59,8 @@ noncomputable def toEuclid : ConfigurationSpace ≃ EuclideanSpace ℝ (Fin 1) w
     right_inv x := by
       ext i
       fin_cases i
-      simp
-    left_inv x := by
-      ext
-      simp
+      rfl
+    left_inv x := rfl
 
 /-- The structure of a topological space on ConfigurationSpace induced
   by `toEuclid`. -/
@@ -98,20 +100,25 @@ noncomputable def toEuclidDiffeo :
     refine contMDiff_iff.mpr ⟨toEuclidHomeo.symm.continuous, fun x y => ?_⟩
     simpa using contDiffOn_id
 
-lemma toEuclidHomeo_mem_atlas :
-    toEuclidHomeo.toOpenPartialHomeomorph ∈ atlas (EuclideanSpace ℝ (Fin 1)) ConfigurationSpace := by simp [atlas, ChartedSpace.atlas]
+lemma toEuclidHomeo_mem_atlas : toEuclidHomeo.toOpenPartialHomeomorph ∈
+    atlas (EuclideanSpace ℝ (Fin 1)) ConfigurationSpace := by simp [atlas, ChartedSpace.atlas]
+
 @[simp]
 lemma chartAt_eq_toEuclidDiffeo (x : ConfigurationSpace) :
     chartAt (EuclideanSpace ℝ (Fin 1)) x  = toEuclidHomeo.toOpenPartialHomeomorph := rfl
 
 lemma achart_eq_toEuclidDiffeo (x : ConfigurationSpace) :
-    achart (EuclideanSpace ℝ (Fin 1)) x  = ⟨toEuclidHomeo.toOpenPartialHomeomorph, toEuclidHomeo_mem_atlas⟩:= by
-  rfl
-
+    achart (EuclideanSpace ℝ (Fin 1)) x  =
+    ⟨toEuclidHomeo.toOpenPartialHomeomorph, toEuclidHomeo_mem_atlas⟩ := rfl
 
 /-!
 
 ## The tangent bundle of the configuration space
+
+We show that the tangent bundle of `ConfigurationSpace` is equivalent to the product
+`EuclideanSpace ℝ (Fin 1) × EuclideanSpace ℝ (Fin 1)`. We do this by
+constructing first an equivalence, then a homeomorphism, and finally a diffeomorphism
+between these two spaces.
 
 -/
 
@@ -121,6 +128,8 @@ lemma achart_eq_toEuclidDiffeo (x : ConfigurationSpace) :
 
 -/
 
+/-- The equivalence between the tangent space of `ConfigurationSpace` and the
+  product `EuclideanSpace ℝ (Fin 1) × EuclideanSpace ℝ (Fin 1)`. -/
 noncomputable def toEuclidTangent :
     TangentBundle I ConfigurationSpace ≃ EuclideanSpace ℝ (Fin 1) × EuclideanSpace ℝ (Fin 1) where
   toFun x :=  ⟨toEuclidDiffeo x.1, x.2⟩
@@ -201,8 +210,10 @@ lemma toEuclidTangent_symm_continuous : Continuous toEuclidTangent.symm := by
 
 -/
 
-noncomputable def toEuclidTangentHomeo :
-    TangentBundle I ConfigurationSpace ≃ₜ (EuclideanSpace ℝ (Fin 1) × EuclideanSpace ℝ (Fin 1)) where
+/-- The homeomorphism between the tangent space of `ConfigurationSpace` and the
+  product `EuclideanSpace ℝ (Fin 1) × EuclideanSpace ℝ (Fin 1)`. -/
+noncomputable def toEuclidTangentHomeo : TangentBundle I ConfigurationSpace ≃ₜ
+    (EuclideanSpace ℝ (Fin 1) × EuclideanSpace ℝ (Fin 1)) where
   toEquiv := toEuclidTangent
   continuous_toFun := toEuclidTangent_continuous
   continuous_invFun := toEuclidTangent_symm_continuous
@@ -223,6 +234,8 @@ lemma chartAt_tangent_eq_toEuclidTangentHomeo {x : TangentBundle I Configuration
 
 -/
 
+/-- The diffeomorphism between the tangent space of `ConfigurationSpace` and the
+  product `EuclideanSpace ℝ (Fin 1) × EuclideanSpace ℝ (Fin 1)`. -/
 noncomputable def toEuclidTangentDiffeo :
     Diffeomorph (.tangent I) (.prod I I)
       (TangentBundle I ConfigurationSpace)
