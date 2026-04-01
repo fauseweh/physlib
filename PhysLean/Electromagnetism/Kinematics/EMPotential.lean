@@ -7,7 +7,7 @@ module
 
 public import PhysLean.Electromagnetism.Basic
 public import PhysLean.SpaceAndTime.SpaceTime.TimeSlice
-public import PhysLean.Mathematics.VariationalCalculus.HasVarGradient
+public import PhysLean.ClassicalMechanics.VariationalCalculus.HasVarGradient
 /-!
 
 # The Electromagnetic Potential

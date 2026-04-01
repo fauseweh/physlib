@@ -5,7 +5,7 @@ Authors: Tomas Skrivan, Joseph Tooby-Smith
 -/
 module
 
-public import PhysLean.Mathematics.VariationalCalculus.IsLocalizedfunctionTransform
+public import PhysLean.ClassicalMechanics.VariationalCalculus.IsLocalizedfunctionTransform
 /-!
 # Variational adjoint
 

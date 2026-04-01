@@ -15,6 +15,12 @@ public import PhysLean.ClassicalMechanics.Pendulum.SlidingPendulum
 public import PhysLean.ClassicalMechanics.RigidBody.Basic
 public import PhysLean.ClassicalMechanics.RigidBody.SolidSphere
 public import PhysLean.ClassicalMechanics.Scattering.RigidSphere
+public import PhysLean.ClassicalMechanics.VariationalCalculus.Basic
+public import PhysLean.ClassicalMechanics.VariationalCalculus.HasVarAdjDeriv
+public import PhysLean.ClassicalMechanics.VariationalCalculus.HasVarAdjoint
+public import PhysLean.ClassicalMechanics.VariationalCalculus.HasVarGradient
+public import PhysLean.ClassicalMechanics.VariationalCalculus.IsLocalizedfunctionTransform
+public import PhysLean.ClassicalMechanics.VariationalCalculus.IsTestFunction
 public import PhysLean.ClassicalMechanics.Vibrations.LinearTriatomic
 public import PhysLean.ClassicalMechanics.WaveEquation.Basic
 public import PhysLean.ClassicalMechanics.WaveEquation.HarmonicWave
@@ -73,12 +79,6 @@ public import PhysLean.Mathematics.SO3.Basic
 public import PhysLean.Mathematics.SchurTriangulation
 public import PhysLean.Mathematics.SpecialFunctions.PhysHermite
 public import PhysLean.Mathematics.Trigonometry.Tanh
-public import PhysLean.Mathematics.VariationalCalculus.Basic
-public import PhysLean.Mathematics.VariationalCalculus.HasVarAdjDeriv
-public import PhysLean.Mathematics.VariationalCalculus.HasVarAdjoint
-public import PhysLean.Mathematics.VariationalCalculus.HasVarGradient
-public import PhysLean.Mathematics.VariationalCalculus.IsLocalizedfunctionTransform
-public import PhysLean.Mathematics.VariationalCalculus.IsTestFunction
 public import PhysLean.Meta.AllFilePaths
 public import PhysLean.Meta.Basic
 public import PhysLean.Meta.Informal.Basic

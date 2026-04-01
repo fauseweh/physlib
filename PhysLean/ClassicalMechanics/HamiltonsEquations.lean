@@ -5,7 +5,7 @@ Authors: Tomas Skrivan, Joseph Tooby-Smith
 -/
 module
 
-public import PhysLean.Mathematics.VariationalCalculus.HasVarGradient
+public import PhysLean.ClassicalMechanics.VariationalCalculus.HasVarGradient
 /-!
 
 # Hamilton's equations
