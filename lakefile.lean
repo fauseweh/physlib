@@ -3,7 +3,7 @@ open System Lake DSL
 
 package «PhysLib»
 
-require "mathlib" from git "https://github.com/leanprover-community/mathlib4.git" @ "v4.28.0"
+require "mathlib" from git "https://github.com/leanprover-community/mathlib4.git" @ "8f9d9cff6bd728b17a24e163c9402775d9e6a365"
 
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "v4.28.0"
 
