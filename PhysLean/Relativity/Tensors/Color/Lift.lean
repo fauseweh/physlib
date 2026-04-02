@@ -59,6 +59,7 @@ we get an object of `Rep k G` by taking the tensor product of the representation
 
 variable (F : Discrete C ⥤ Rep k G)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Given an object `f : OverColor C` and a function `F : Discrete C ⥤ Rep k G`, the object
   in `Rep k G` obtained by taking the tensor product of all colors in `f`. -/
 def toRep (f : OverColor C) : Rep k G := Rep.of {

@@ -40,6 +40,7 @@ noncomputable abbrev ℍ₂ := selfAdjoint ℂ²ˣ²
 
 namespace SL2C
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Definitionally equal to `Lorentz.SL2C.toSelfAdjointMap` but dropping the requirement that `M` be
 special linear. -/
 noncomputable def toSelfAdjointMap' (M : ℂ²ˣ²) : ℍ₂ →ₗ[ℝ] ℍ₂ where
@@ -91,6 +92,7 @@ which is 1.
 -/
 open Matrix
 
+set_option backward.isDefEq.respectTransparency false in
 open Complex (I normSq) in
 lemma toSelfAdjointMap_det_one' {M : ℂ²ˣ²} (hM : M.IsUpperTriangular) (detM : M.det = 1) :
     LinearMap.det (toSelfAdjointMap' M) = 1 :=

@@ -91,6 +91,7 @@ instance [inst : InnerProductSpace' 𝕜 E] : InnerProductSpace.Core 𝕜 E := i
 
 instance [inst : InnerProductSpace' 𝕜 E] : Inner 𝕜 E := inst.core.toInner
 
+set_option backward.isDefEq.respectTransparency false in
 instance {𝕜 : Type*} {E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [inst : InnerProductSpace 𝕜 E] :
     InnerProductSpace' 𝕜 E where
   norm₂ x := ‖x‖
@@ -414,6 +415,8 @@ instance : InnerProductSpace' 𝕜 (E × F) where
       exact Prod.ext_iff.mpr h1
   }
 
+set_option backward.whnf.reducibleClassField false in
+set_option backward.isDefEq.respectTransparency false in
   norm₂_sq_eq_re_inner := by
     intro (x,y)
     have : 0 ≤ re ⟪x,x⟫ := PreInnerProductSpace.Core.re_inner_nonneg (𝕜:=𝕜) (F:=E) _ x

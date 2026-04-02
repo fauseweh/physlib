@@ -123,12 +123,14 @@ lemma update_succAbove_apply {n : ℕ} {c : Fin (n + 1) → C} [inst : Decidable
   rw [Function.update_of_ne]
   exact Fin.ne_succAbove i j
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma toTensor_update_add {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)] (p : Pure S c)
     (i : Fin n) (x y : S.FD.obj (Discrete.mk (c i))) :
     (update p i (x + y)).toTensor = (update p i x).toTensor + (update p i y).toTensor := by
   simp [toTensor, update]
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma toTensor_update_smul {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)] (p : Pure S c)
     (i : Fin n) (r : k) (y : S.FD.obj (Discrete.mk (c i))) :
@@ -167,6 +169,7 @@ lemma update_drop_self {n : ℕ} {c : Fin (n + 1) → C} [inst : DecidableEq (Fi
   rw [Function.update_of_ne]
   exact Fin.succAbove_ne i k
 
+set_option backward.isDefEq.respectTransparency false in
 lemma μ_toTensor_tmul_toTensor {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
     (t : Pure S c) (t1 : Pure S c1) :
     ((Functor.LaxMonoidal.μ S.F _ _).hom (t.toTensor ⊗ₜ t1.toTensor)) =
@@ -327,6 +330,8 @@ lemma componentMap_ofComponents {n : ℕ} (c : Fin n → C) (f : ComponentIdx c 
   ext b
   simp [ofComponents]
 
+set_option backward.whnf.reducibleClassField false in
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma ofComponents_componentMap {n : ℕ} (c : Fin n → C) (t : S.Tensor c) :
     ofComponents c (componentMap c t) = t := by

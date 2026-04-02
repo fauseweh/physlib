@@ -424,6 +424,7 @@ lemma P_linearACC (f : Fin n → ℚ) : (accGrav (2 * n + 1)) (P f) = 0 := by
   rw [sum_odd]
   simp [P_oddSnd, P_oddFst, P_oddMid]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma P_accCube (f : Fin n → ℚ) : accCube (2 * n +1) (P f) = 0 := by
   rw [accCube_explicit, sum_odd, P_oddMid]
   simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, Function.comp_apply, zero_add]
@@ -671,6 +672,7 @@ lemma P!_linearACC (f : Fin n → ℚ) : (accGrav (2 * n + 1)) (P! f) = 0 := by
   rw [sum_oddShift]
   simp [P!_oddShiftSnd, P!_oddShiftFst, P!_oddShiftZero]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma P!_accCube (f : Fin n → ℚ) : accCube (2 * n +1) (P! f) = 0 := by
   rw [accCube_explicit, sum_oddShift, P!_oddShiftZero]
   simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, Function.comp_apply, zero_add]
@@ -729,6 +731,7 @@ theorem basis!_linear_independent : LinearIndependent ℚ (@basis! n) := by
 
 -/
 
+set_option backward.isDefEq.respectTransparency false in
 lemma P_P_P!_accCube (g : Fin n → ℚ) (j : Fin n) :
     accCubeTriLinSymm (P g) (P g) (basis!AsCharges j)
     = (P g (oddShiftFst j))^2 - (g j)^2 := by
