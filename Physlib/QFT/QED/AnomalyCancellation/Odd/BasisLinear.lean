@@ -206,6 +206,7 @@ def oddShiftShiftSnd (j : Fin n.succ) : Fin (2 * n.succ + 1) :=
 ### A.4. Relating the splittings together
 
 -/
+
 lemma oddShiftShiftZero_eq_oddFst_zero : @oddShiftShiftZero n = oddFst 0 :=
   Fin.rev_inj.mp rfl
 
@@ -244,6 +245,22 @@ lemma oddSnd_eq_oddShiftSnd (j : Fin n) : oddSnd j = oddShiftSnd j := by
   rw [Fin.ext_iff]
   simp only [oddSnd, Fin.val_cast, Fin.val_natAdd, oddShiftSnd, add_left_inj]
   exact Nat.add_comm n 1
+
+lemma oddShiftFst_castSucc_eq_oddFst_succ (j : Fin n) :
+    oddShiftFst j.castSucc = oddFst j.succ := by
+  apply Fin.eq_of_val_eq
+  simp [oddShiftFst, oddFst]
+  ring
+
+lemma oddShiftFst_last_eq_oddMid : oddShiftFst (Fin.last n) = oddMid := by
+  apply Fin.eq_of_val_eq
+  simp [oddShiftFst, oddMid]
+  ring
+
+lemma oddShiftSnd_eq_oddSnd (j : Fin n) : oddShiftSnd j = oddSnd j := by
+  apply Fin.eq_of_val_eq
+  simp [oddShiftSnd, oddSnd]
+  ring
 
 end theDeltas
 
@@ -411,6 +428,11 @@ lemma P_oddSnd (f : Fin n → ℚ) (j : Fin n) : P f (oddSnd j) = - f j := by
 lemma P_oddMid (f : Fin n → ℚ) : P f oddMid = 0 := by
   rw [P, sum_of_charges]
   simp [HSMul.hSMul, SMul.smul, basis_on_oddMid]
+
+lemma P_oddShiftZero (f : Fin n.succ → ℚ) : P f oddShiftZero = f 0 := by
+  rw [← P_oddFst f 0]
+  congr
+  simp [oddShiftZero, oddFst, Fin.castAdd]
 
 /-!
 
@@ -781,7 +803,7 @@ lemma Pa_oddShiftShiftZero (f g : Fin n.succ → ℚ) : Pa f g oddShiftShiftZero
   simp only [ACCSystemCharges.chargesAddCommMonoid_add]
   nth_rewrite 1 [oddShiftShiftZero_eq_oddFst_zero]
   rw [oddShiftShiftZero_eq_oddShiftZero]
-  rw [P_oddFst, P!_oddShiftZero]
+  rw [P_oddShiftZero, P!_oddShiftZero]
   exact Rat.add_zero (f 0)
 
 lemma Pa_oddShiftShiftFst (f g : Fin n.succ → ℚ) (j : Fin n) :
@@ -789,15 +811,16 @@ lemma Pa_oddShiftShiftFst (f g : Fin n.succ → ℚ) (j : Fin n) :
   rw [Pa]
   simp only [ACCSystemCharges.chargesAddCommMonoid_add]
   nth_rewrite 1 [oddShiftShiftFst_eq_oddFst_succ]
-  rw [oddShiftShiftFst_eq_oddShiftFst_castSucc]
-  rw [P_oddFst, P!_oddShiftFst]
+  rw [oddShiftShiftFst_eq_oddShiftFst_castSucc,
+    P!_oddShiftFst, oddShiftFst_castSucc_eq_oddFst_succ, ← P_oddFst f j.succ]
+
 
 lemma Pa_oddShiftShiftMid (f g : Fin n.succ → ℚ) : Pa f g oddShiftShiftMid = g (Fin.last n) := by
   rw [Pa]
   simp only [ACCSystemCharges.chargesAddCommMonoid_add]
   nth_rewrite 1 [oddShiftShiftMid_eq_oddMid]
   rw [oddShiftShiftMid_eq_oddShiftFst_last]
-  rw [P_oddMid, P!_oddShiftFst]
+  rw [P!_oddShiftFst, oddShiftFst_last_eq_oddMid, P_oddMid]
   exact Rat.zero_add (g (Fin.last n))
 
 lemma Pa_oddShiftShiftSnd (f g : Fin n.succ → ℚ) (j : Fin n.succ) :
@@ -806,7 +829,7 @@ lemma Pa_oddShiftShiftSnd (f g : Fin n.succ → ℚ) (j : Fin n.succ) :
   simp only [ACCSystemCharges.chargesAddCommMonoid_add]
   nth_rewrite 1 [oddShiftShiftSnd_eq_oddSnd]
   rw [oddShiftShiftSnd_eq_oddShiftSnd]
-  rw [P_oddSnd, P!_oddShiftSnd]
+  rw [P!_oddShiftSnd, oddShiftSnd_eq_oddSnd, P_oddSnd]
   ring
 
 /-!

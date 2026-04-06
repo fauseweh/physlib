@@ -12,12 +12,14 @@ lean_lib Physlib where
   moreLeanArgs := #[
     "-Dwarn.sorry=false"
   ]
+  leanOptions := #[⟨`backward.isDefEq.respectTransparency, false⟩]
 
 @[default_target]
 lean_lib QuantumInfo where
   moreLeanArgs := #[
     "-Dwarn.sorry=false"
   ]
+  leanOptions := #[⟨`backward.isDefEq.respectTransparency, false⟩]
 
 -- These were their own lean_lib in Lean-QuantumInfo, we should move them to appropriate directories.
 -- lean_lib ClassicalInfo
