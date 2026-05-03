@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2025 Nicola Bernini. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Nicola Bernini
+Authors: Nicola Bernini, Benedikt Fauseweh
 -/
 module
 
@@ -116,9 +116,11 @@ lemma m_ne_zero : S.m ≠ 0 := Ne.symm (ne_of_lt S.m_pos)
 
 /-!
 
-## B. The natural angular frequency (placeholder)
+## B. The natural angular frequency and decay rate
 
-The natural angular frequency ω₀ = √(k/m) will be defined here.
+The natural angular frequency ω₀ = √(k/m) and the decay rate β = γ/(2m) are the two
+fundamental derived quantities of the damped harmonic oscillator. Together they determine
+the discriminant and hence the damping regime.
 
 -/
 
@@ -131,6 +133,20 @@ lemma ω₀_pos : 0 < S.ω₀ := sqrt_pos.mpr (div_pos S.k_pos S.m_pos)
 lemma ω₀_sq : S.ω₀^2 = S.k / S.m := by
   rw [ω₀, sq_sqrt]
   exact div_nonneg (le_of_lt S.k_pos) (le_of_lt S.m_pos)
+
+lemma ω₀_ne_zero : S.ω₀ ≠ 0 := Ne.symm (ne_of_lt S.ω₀_pos)
+
+/-- The decay rate (half-damping coefficient) β = γ/(2m). -/
+noncomputable def β : ℝ := S.γ / (2 * S.m)
+
+/-- The decay rate β is non-negative. -/
+lemma β_nonneg : 0 ≤ S.β :=
+  div_nonneg S.γ_nonneg (mul_nonneg (by norm_num) (le_of_lt S.m_pos))
+
+/-- The square of β satisfies β² = γ²/(4m²). -/
+lemma β_sq : S.β ^ 2 = S.γ ^ 2 / (4 * S.m ^ 2) := by
+  rw [β]
+  ring
 
 /-!
 ## C. Equation of motion (Tag: DHO03)
@@ -260,6 +276,11 @@ def IsCriticallyDamped : Prop := S.discriminant = 0
 
 /-- The system is overdamped when γ² > 4mk. -/
 def IsOverdamped : Prop := S.discriminant > 0
+
+/-- The discriminant equals `4 m² (β² − ω₀²)`. -/
+lemma discriminant_eq : S.discriminant = 4 * S.m ^ 2 * (S.β ^ 2 - S.ω₀ ^ 2) := by
+  simp only [discriminant, β_sq, ω₀_sq]
+  field_simp
 
 end DampedHarmonicOscillator
 
