@@ -139,12 +139,16 @@ noncomputable instance {d} : MulAction (LorentzGroup d) (ElectromagneticPotentia
     ext i
     simp [action_val, one_smul]
 
+TODO "Lift the action on `ElectromagneticPotential d` to a `DistribMulAction`."
+
 /-!
 
 ### A.3. Differentiability
 
 We show that the components of field strength tensor are differentiable if the potential is.
 -/
+
+open ContDiff
 
 @[fun_prop]
 lemma differentiable_component {d : ℕ}
@@ -162,6 +166,44 @@ lemma differentiable_action {d} (Λ : LorentzGroup d) (A : ElectromagneticPotent
   · apply Differentiable.comp
     · exact hA
     · exact ContinuousLinearMap.differentiable (Lorentz.Vector.actionCLM Λ⁻¹)
+
+@[fun_prop]
+lemma contDiff_action {d} (Λ : LorentzGroup d) (A : ElectromagneticPotential d)
+    (hA : ContDiff ℝ n A) : ContDiff ℝ n (fun x => Λ • A (Λ⁻¹ • x)) := by
+  apply ContDiff.comp
+  · exact ContinuousLinearMap.contDiff (Lorentz.Vector.actionCLM Λ)
+  · apply ContDiff.comp
+    · exact hA
+    · exact ContinuousLinearMap.contDiff (Lorentz.Vector.actionCLM Λ⁻¹)
+
+@[fun_prop]
+lemma differentiable_deriv {d} {A : ElectromagneticPotential d}
+    (hA : ContDiff ℝ 2 A) (μ ν : Fin 1 ⊕ Fin d) :
+    Differentiable ℝ (fun x => ∂_ μ A x ν) := by
+  have diff_partial (μ) :
+      ∀ ν, Differentiable ℝ fun x => (fderiv ℝ A x) (Lorentz.Vector.basis μ) ν := by
+    rw [SpaceTime.differentiable_vector]
+    fun_prop
+  exact diff_partial μ ν
+
+@[fun_prop]
+lemma differentiable_deriv_of_smooth {d} {A : ElectromagneticPotential d}
+    (hA : ContDiff ℝ ∞ A) (μ ν : Fin 1 ⊕ Fin d) :
+    Differentiable ℝ (fun x => ∂_ μ A x ν) := by
+  apply differentiable_deriv (hA.of_le (ENat.LEInfty.out)) μ ν
+
+@[fun_prop]
+lemma contDiff_deriv {n} {d} {A : ElectromagneticPotential d}
+    (hA : ContDiff ℝ (n + 1) A) (μ ν : Fin 1 ⊕ Fin d) :
+    ContDiff ℝ n (fun x => ∂_ μ A x ν) := by
+  have diff_partial (μ) :
+      ∀ ν, ContDiff ℝ n fun x => (fderiv ℝ A x) (Lorentz.Vector.basis μ) ν := by
+    rw [SpaceTime.contDiff_vector]
+    fun_prop
+  exact diff_partial μ ν
+
+TODO "Add results related to the differentiability of the
+  derivative of the Electromagnetic potential."
 
 /-!
 

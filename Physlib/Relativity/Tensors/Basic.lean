@@ -42,6 +42,12 @@ namespace Tensor
 variable {S : TensorSpecies k C G basisIdx} {n n' n2 : ℕ} {c : Fin n → C} {c' : Fin n' → C}
   {c2 : Fin n2 → C}
 
+TODO "Refactor: Throughout the `Tensor` file system are lemmas related to
+  `ComponentIdx`. The definition of `ComponentIdx` and the lemmas about it should
+  be placed in it's own directory. Around `ComponentIdx`, we should build
+  convenient API. Here `ComponentIdx` is the type of values that indices
+  in e.g. Lorentz tensors can take."
+
 set_option linter.unusedVariables false in
 /-- Given a list of indices `c : Fin n → C` e.g. `![.up, .down]`, the type
   `ComponentIdx c` is the type of components indexes of a tensor with those indices
@@ -60,6 +66,10 @@ def ComponentIdx.cast {n m : ℕ} {c : Fin n → C} {cm : Fin m → C}
     (h : n = m) (hc : c = cm ∘ Fin.cast h) (b : ComponentIdx (S := S) c) :
     ComponentIdx (S := S) cm := fun j =>
       basisIdxCongr (by simp [hc]) (b (Fin.cast h.symm j))
+
+TODO "Define the equivalence between `ComponentIdx ![c]` and `basisIdx c`.
+  Replace Lorentz.Vector.indexEquiv and Lorentz.CoVector.indexEquiv with this more
+  general definition."
 
 /-!
 
