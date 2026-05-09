@@ -109,10 +109,12 @@ namespace DampedHarmonicOscillator
 variable (S : DampedHarmonicOscillator)
 
 @[simp]
-lemma k_ne_zero : S.k ≠ 0 := Ne.symm (ne_of_lt S.k_pos)
+lemma k_ne_zero : S.k ≠ 0 := by
+linarith [S.k_pos]
 
 @[simp]
-lemma m_ne_zero : S.m ≠ 0 := Ne.symm (ne_of_lt S.m_pos)
+lemma m_ne_zero : S.m ≠ 0 := by
+linarith [S.m_pos]
 
 /-!
 
@@ -128,20 +130,28 @@ the discriminant and hence the damping regime.
 noncomputable def ω₀ : ℝ := √(S.k / S.m)
 
 @[simp]
-lemma ω₀_pos : 0 < S.ω₀ := sqrt_pos.mpr (div_pos S.k_pos S.m_pos)
+lemma ω₀_pos : 0 < S.ω₀ := by
+  simp [ω₀]
+  positivity [S.k_pos, S.m_pos]
+
+
+--sqrt_pos.mpr (div_pos S.k_pos S.m_pos)
 
 lemma ω₀_sq : S.ω₀^2 = S.k / S.m := by
-  rw [ω₀, sq_sqrt]
-  exact div_nonneg (le_of_lt S.k_pos) (le_of_lt S.m_pos)
+  simp [ω₀]
+  rw [sq_sqrt]
+  positivity [S.k_pos, S.m_pos]
 
-lemma ω₀_ne_zero : S.ω₀ ≠ 0 := Ne.symm (ne_of_lt S.ω₀_pos)
+lemma ω₀_ne_zero : S.ω₀ ≠ 0 := by
+  positivity [S.ω₀_pos]
 
 /-- The decay rate (half-damping coefficient) β = γ/(2m). -/
 noncomputable def β : ℝ := S.γ / (2 * S.m)
 
 /-- The decay rate β is non-negative. -/
-lemma β_nonneg : 0 ≤ S.β :=
-  div_nonneg S.γ_nonneg (mul_nonneg (by norm_num) (le_of_lt S.m_pos))
+lemma β_nonneg : 0 ≤ S.β := by
+  rw [β]
+  positivity [S.γ_nonneg, S.m_pos]
 
 /-- The square of β satisfies β² = γ²/(4m²). -/
 lemma β_sq : S.β ^ 2 = S.γ ^ 2 / (4 * S.m ^ 2) := by
