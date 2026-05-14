@@ -5,7 +5,10 @@ Authors: Nicola Bernini, Benedikt Fauseweh
 -/
 module
 
+public import Physlib.ClassicalMechanics.EulerLagrange
+public import Physlib.ClassicalMechanics.HamiltonsEquations
 public import Physlib.SpaceAndTime.Time.Derivatives
+public import Mathlib.Data.Real.Hom
 /-!
 
 # The Damped Harmonic Oscillator
@@ -41,15 +44,17 @@ are planned to be formalized:
 
 ## iii. Table of contents
 
-- A. The input data (to be implemented)
-- B. The damped angular frequency (to be implemented)
-- C. The energies and energy dissipation (to be implemented)
-- D. The equation of motion (to be implemented)
-- E. Solutions (to be implemented)
-  - E.1. Underdamped case
-  - E.2. Critically damped case
-  - E.3. Overdamped case
-- F. Quality factor and decay time (to be implemented)
+- A. The input data
+- B. The damped angular frequency and decay rate
+- C. The energies
+- D. The equation of motion
+- E. Energy dissipation
+
+- F. Solutions (to be implemented)
+  - F.1. Underdamped case
+  - F.2. Critically damped case
+  - F.3. Overdamped case
+- G. Quality factor and decay time (to be implemented)
 
 ## iv. References
 
@@ -63,8 +68,8 @@ References for the damped harmonic oscillator include:
 
 namespace ClassicalMechanics
 open Real
-open ContDiff
-open Time
+open Space
+open InnerProductSpace
 
 TODO "Derive solutions for the underdamped case (oscillatory with exponential decay)."
 
@@ -80,7 +85,7 @@ TODO "Prove that the damped harmonic oscillator reduces to the undamped case whe
 
 /-!
 
-## A. The input data (placeholder)
+## A. The input data
 
 The input data for the damped harmonic oscillator will consist of:
 - Mass `m > 0`
@@ -159,113 +164,181 @@ lemma β_sq : S.β ^ 2 = S.γ ^ 2 / (4 * S.m ^ 2) := by
   ring
 
 /-!
-## C. Equation of motion (Tag: DHO03)
 
-The damped harmonic oscillator with mass `m`, spring
-constant `k`, and damping coefficient `γ` satisfies
-
-    m ẍ + γ ẋ + k x = 0,
-
-where `x : Time → ℝ` is the position as a function of time.
+## C. Energies
 -/
 
-/-- The equation of motion for the damped harmonic oscillator.
+open MeasureTheory ContDiff InnerProductSpace Time
 
-A function `x : Time → ℝ` is a solution if it satisfies
+/-- The kinetic energy of the damped harmonic oscillator is $\frac{1}{2} m ‖\dot x‖^2$. -/
+noncomputable def kineticEnergy ( xₜ : Time → EuclideanSpace ℝ (Fin 1)) : Time → ℝ :=
+  fun t => (1 / 2 : ℝ) * S.m * ⟪∂ₜ xₜ t, ∂ₜ xₜ t⟫_ℝ
 
-    S.m * x¨ + S.γ * ẋ + S.k * x = 0
+/-- The potential energy of the damped harmonic oscillator is `1/2 k x ^ 2` -/
+noncomputable def potentialEnergy (x : EuclideanSpace ℝ (Fin 1)) : ℝ :=
+  (1 / (2 : ℝ)) • S.k • ⟪x, x⟫_ℝ
 
-for all times `t`. -/
-noncomputable def EquationOfMotion (x : Time → ℝ) : Prop :=
-  ∀ t : Time,
-    S.m * (Time.deriv (Time.deriv x) t) +
-    S.γ * (Time.deriv x t) +
-    S.k * x t = 0
+/-- The energy of the damped harmonic oscillator is the kinetic energy plus the potential energy. -/
+noncomputable def energy (xₜ : Time → EuclideanSpace ℝ (Fin 1)) : Time → ℝ := fun t =>
+  kineticEnergy S xₜ t + potentialEnergy S (xₜ t)
+
+
+
+
+lemma kineticEnergy_eq (xₜ : Time → EuclideanSpace ℝ (Fin 1)) :
+    kineticEnergy S xₜ = fun t => (1 / (2 : ℝ)) * S.m * ⟪∂ₜ xₜ t, ∂ₜ xₜ t⟫_ℝ:= by rfl
+
+lemma potentialEnergy_eq (x : EuclideanSpace ℝ (Fin 1)) :
+    potentialEnergy S x = (1 / (2 : ℝ)) • S.k • ⟪x, x⟫_ℝ:= by rfl
+
+lemma energy_eq (xₜ : Time → EuclideanSpace ℝ (Fin 1)) :
+    energy S xₜ = fun t => kineticEnergy S xₜ t + potentialEnergy S (xₜ t) := by rfl
+/-!
+
+
+### C.3. Differentiability of the energies
+
+On smooth trajectories the energies are differentiable.
+
+-/
+@[fun_prop]
+lemma kineticEnergy_differentiable (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
+    Differentiable ℝ (kineticEnergy S xₜ) := by
+  rw [kineticEnergy_eq]
+  change Differentiable ℝ ((fun x => (1 / (2 : ℝ)) * S.m * ⟪x, x⟫_ℝ) ∘ (fun t => ∂ₜ xₜ t))
+  apply Differentiable.comp
+  · fun_prop
+  · exact deriv_differentiable_of_contDiff xₜ hx
+
+@[fun_prop]
+lemma potentialEnergy_differentiable (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
+    Differentiable ℝ (fun t => potentialEnergy S (xₜ t)) := by
+  simp only [potentialEnergy_eq, one_div, smul_eq_mul]
+  change Differentiable ℝ ((fun x => 2⁻¹ * (S.k * ⟪x, x⟫_ℝ)) ∘ xₜ)
+  apply Differentiable.comp
+  · fun_prop
+  · rw [contDiff_infty_iff_fderiv] at hx
+    exact hx.1
+
+@[fun_prop]
+lemma energy_differentiable (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
+    Differentiable ℝ (energy S xₜ) := by
+  rw [energy_eq]
+  fun_prop
 
 /-!
-## D. The energies and energy dissipation (Tag: DHO04)
 
-For the damped harmonic oscillator, the mechanical energy is
+### C.4. Time derivatives of the energies
 
-  E(t) = ½ S.m (ẋ(t))^2 + ½ S.k (x(t))^2,
+For a general smooth trajectory (which may not satisfy the equations of motion) we can compute
+the time derivatives of the energies.
 
-where `x : Time → ℝ` is the position as a function of time.
-
-If `x` satisfies the equation of motion
-
-  S.m * x¨ + S.γ * ẋ + S.k * x = 0,
-
-then differentiating `E` with respect to time and substituting the
-equation of motion yields
-
-  dE/dt = - S.γ * (ẋ(t))^2 ≤ 0
-
-Thus the energy is non-increasing in time, and it is strictly decreasing
-whenever `S.γ > 0` and `ẋ(t) ≠ 0`. In particular, for `S.γ > 0`
-the energy is not conserved, and the energy dissipation rate is
-proportional to the squared velocity.
 -/
 
-/-- The kinetic energy of the damped harmonic oscillator. -/
-noncomputable def kineticEnergy (x : Time → ℝ) : Time → ℝ :=
-  fun t => (1 / 2 : ℝ) * S.m * (Time.deriv x t)^2
+set_option backward.isDefEq.respectTransparency false in
+lemma kineticEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
+    ∂ₜ (kineticEnergy S xₜ) = fun t => ⟪∂ₜ xₜ t, S.m • ∂ₜ (∂ₜ xₜ) t⟫_ℝ := by
+  funext t
+  unfold kineticEnergy
+  conv_lhs => simp only [Time.deriv, one_div, ringHom_apply]
+  change (fderiv ℝ ((fun x => 2⁻¹ * S.m * ⟪x, x⟫_ℝ) ∘ (fun t => ∂ₜ xₜ t)) t) 1 = _
+  rw [fderiv_comp]
+  rw [fderiv_const_mul (by fun_prop)]
+  simp only [ContinuousLinearMap.smul_comp, ContinuousLinearMap.coe_smul',
+    ContinuousLinearMap.coe_comp', Pi.smul_apply, Function.comp_apply, smul_eq_mul]
+  rw [fderiv_inner_apply]
+  simp only [fderiv_id', ContinuousLinearMap.coe_id', id_eq]
+  rw [real_inner_comm, ← inner_add_left, ← Time.deriv, real_inner_comm, ← inner_smul_right]
+  congr 1
+  simp only [smul_add]
+  module
+  repeat fun_prop
 
-/-- The potential energy of the damped harmonic oscillator. -/
-noncomputable def potentialEnergy (x : Time → ℝ) : Time → ℝ :=
-  fun t => (1 / 2 : ℝ) * S.k * (x t)^2
+set_option backward.isDefEq.respectTransparency false in
+lemma potentialEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
+    ∂ₜ (fun t => potentialEnergy S (xₜ t)) = fun t => ⟪∂ₜ xₜ t, S.k • xₜ t⟫_ℝ := by
+  funext t
+  unfold potentialEnergy
+  conv_lhs => simp only [Time.deriv, one_div, smul_eq_mul]
+  change (fderiv ℝ ((fun x => 2⁻¹ * (S.k * ⟪x, x⟫_ℝ)) ∘ (fun t => xₜ t)) t) 1 = _
+  rw [fderiv_comp]
+  rw [fderiv_const_mul (by fun_prop), fderiv_const_mul (by fun_prop)]
+  simp only [ContinuousLinearMap.smul_comp, ContinuousLinearMap.coe_smul',
+    ContinuousLinearMap.coe_comp', Pi.smul_apply, Function.comp_apply, smul_eq_mul]
+  rw [fderiv_inner_apply]
+  simp only [fderiv_id', ContinuousLinearMap.coe_id', id_eq]
+  trans S.k * ⟪xₜ t, ∂ₜ xₜ t⟫_ℝ
+  · rw [real_inner_comm, ← inner_add_left, ← Time.deriv, real_inner_comm, ← inner_smul_right,
+      ← inner_smul_right, ← inner_smul_right]
+    congr 1
+    module
+  rw [real_inner_comm, ← inner_smul_right]
+  repeat fun_prop
+  apply Differentiable.differentiableAt
+  rw [contDiff_infty_iff_fderiv] at hx
+  exact hx.1
 
-/-- Mechanical energy of the damped harmonic oscillator. -/
-noncomputable def energy (x : Time → ℝ) : Time → ℝ :=
-  S.kineticEnergy x + S.potentialEnergy x
-
-/-- Equalties for energy eqns -/
-lemma kineticEnergy_eq (x: Time → ℝ) :
-    kineticEnergy S x = fun t => (1 / 2 : ℝ) * S.m * (Time.deriv x t)^2 := by rfl
-
-lemma potentialEnergy_eq (x: Time → ℝ) :
-    potentialEnergy S x = fun t => (1 / 2 : ℝ) * S.k * (x t)^2 := by rfl
-
-/-- Energy dissipation rate along a trajectory `x : Time → ℝ`.
-
-  if `x` satisfies `S.equationOfMotion x`, then
-
-  Time.deriv (S.energy x) t = - S.γ * (Time.deriv x t)^2,
-
-so the energy is non-increasing and not conserved when `S.γ > 0`. -/
-noncomputable def energyDissipationRate (x : Time → ℝ) : Time → ℝ :=
-  fun t => - S.γ * (Time.deriv x t)^2
-
-/-- Derives the energy dissipation rate from the equation of motion -/
-lemma energy_dissipation_rate (x: Time → ℝ) (h1 : S.EquationOfMotion x)
-    (hx : ContDiff ℝ ∞ x) :
-    Time.deriv (energy S x) t = - S.γ * (Time.deriv x t)^2 := by
-
-  -- Rearrange Equation of Motion
-  have heom' : S.m * Time.deriv (Time.deriv x) t + S.k * x t =
-              - S.γ * Time.deriv x t := by linarith [h1 t]
-
-  -- Break equation apart
-  rw [energy, kineticEnergy_eq, potentialEnergy_eq]
+set_option backward.isDefEq.respectTransparency false in
+lemma energy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
+    ∂ₜ (energy S xₜ) = fun t => ⟪∂ₜ xₜ t, S.m • ∂ₜ (∂ₜ xₜ) t + S.k • xₜ t⟫_ℝ := by
+  unfold energy
+  funext t
   rw [Time.deriv_eq]
+  rw [fderiv_fun_add (by fun_prop) (by apply S.potentialEnergy_differentiable xₜ hx)]
+  simp only [ContinuousLinearMap.add_apply]
+  rw [← Time.deriv_eq, ← Time.deriv_eq]
+  rw [potentialEnergy_deriv, kineticEnergy_deriv]
+  simp only
+  rw [← inner_add_right]
+  fun_prop
+  fun_prop
 
-  -- Perform derivative
-  have hdx : Differentiable ℝ x := hx.differentiable (by norm_num)
-  have hddx : Differentiable ℝ (∂ₜ x) := deriv_differentiable_of_contDiff x hx
-  have hKE := ((hddx t).hasFDerivAt.pow 2).const_mul (1/2 * S.m)
-  have hPE := ((hdx t).hasFDerivAt.pow 2).const_mul (1/2 * S.k)
-  rw [(hKE.add hPE).fderiv]
-  norm_num
-  rw [← Time.deriv, ← Time.deriv]
-  linear_combination (Time.deriv x t) * heom'
 
-lemma energy_not_conserved (x: Time → ℝ) (h1 : S.EquationOfMotion x)
-    (hx : ContDiff ℝ ∞ x)
-    (hdx : Time.deriv x t ≠ 0)
-    (hγ : 0 < S.γ) :
-    Time.deriv (energy S x) t < 0 := by
-  rw [energy_dissipation_rate S x h1 hx]
-  rw [neg_mul S.γ (∂ₜ x t ^ 2)]
-  refine neg_neg_of_pos (mul_pos hγ (sq_pos_iff.mpr hdx))
+
+
+/-!
+
+## D. Equation of motion
+
+mx¨+γx˙+kx=0,
+
+-/
+
+def EquationOfMotion (xₜ : Time → EuclideanSpace ℝ (Fin 1)) : Prop :=
+  ∀ t : Time, S.m • ∂ₜ (∂ₜ xₜ) t + S.γ • ∂ₜ xₜ t + S.k • xₜ t = 0
+
+
+
+/-!
+
+## E. Energy dissipation
+-/
+example (A B : ℝ) (h : A + B = 0) : A = -B := by
+  suffices h' : A + B = 0 by
+    linarith
+  exact h
+
+noncomputable def EnergyDissipationRate (xₜ : Time → EuclideanSpace ℝ (Fin 1)) : Time → ℝ :=
+  fun t => - S.γ * ⟪∂ₜ xₜ t, ∂ₜ xₜ t⟫_ℝ
+
+lemma energy_dissipation_rate (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (h1 : S.EquationOfMotion xₜ)
+    (hx : ContDiff ℝ ∞ xₜ) (t : Time) :
+    ∂ₜ (energy S xₜ) t = - S.γ * ⟪∂ₜ xₜ t, ∂ₜ xₜ t⟫_ℝ := by
+    rw [energy_deriv S xₜ hx]
+    suffices h : ⟪∂ₜ xₜ t, S.m • ∂ₜ (∂ₜ xₜ) t + S.k • xₜ t⟫_ℝ + S.γ * ⟪∂ₜ xₜ t, ∂ₜ xₜ t⟫_ℝ = 0 by
+      linarith
+    rw [← real_inner_smul_right]
+    rw [← inner_add_right]
+    suffices h : S.m • ∂ₜ (∂ₜ xₜ) t  + S.k • xₜ t + S.γ • ∂ₜ xₜ t = 0 by
+      simp [h]
+    rw [add_right_comm]
+    exact h1 t
+
+lemma energy_dissipation_rate_nonpositive (xₜ : Time → EuclideanSpace ℝ (Fin 1))
+    (h1 : S.EquationOfMotion xₜ) (hx : ContDiff ℝ ∞ xₜ)  (t : Time) :
+    ∂ₜ (energy S xₜ) t ≤ 0 := by
+    simp [energy_dissipation_rate S xₜ h1 hx t]
+    positivity [S.γ_nonneg]
 
 /-!
 
