@@ -208,7 +208,7 @@ proportional to the squared velocity.
 
 /-- The kinetic energy of the damped harmonic oscillator. -/
 noncomputable def kineticEnergy (x : Time → ℝ) : Time → ℝ :=
-  fun t => (1 / 2 : ℝ) * S.m * (Time.deriv x t)^2
+  fun t => (1 / 2 : ℝ) * S.m * ((Time.deriv x) t)^2
 
 /-- The potential energy of the damped harmonic oscillator. -/
 noncomputable def potentialEnergy (x : Time → ℝ) : Time → ℝ :=
@@ -238,7 +238,7 @@ noncomputable def energyDissipationRate (x : Time → ℝ) : Time → ℝ :=
 /-- Derives the energy dissipation rate from the equation of motion -/
 lemma energy_dissipation_rate (x: Time → ℝ) (h1 : S.EquationOfMotion x)
     (hx : ContDiff ℝ ∞ x) :
-    Time.deriv (energy S x) t = - S.γ * (Time.deriv x t)^2 := by
+    Time.deriv (S.energy x) t = - S.γ * (Time.deriv x t)^2 := by
 
   -- Rearrange Equation of Motion
   have heom' : S.m * Time.deriv (Time.deriv x) t + S.k * x t =

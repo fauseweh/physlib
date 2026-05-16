@@ -6,6 +6,7 @@ Authors: Benedikt Fauseweh
 module
 
 public import Physlib.ClassicalMechanics.DampedHarmonicOscillator.Basic
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.DerivHyp
 /-!
 
 # Solutions to the Damped Harmonic Oscillator
@@ -111,22 +112,7 @@ namespace DampedHarmonicOscillator
 
 variable (S : DampedHarmonicOscillator)
 
-/-! Local smoothness lemmas for `Real.cosh` and `Real.sinh` (not yet in Mathlib for `ℝ` here). -/
-
-private lemma contDiff_real_cosh : ContDiff ℝ ⊤ Real.cosh := by
-  have h : Real.cosh = fun x => (Real.exp x + Real.exp (-x)) / 2 := by
-    ext x; rw [Real.cosh_eq]
-  rw [h]
-  exact (Real.contDiff_exp.add (Real.contDiff_exp.comp (ContDiff.neg contDiff_id))).div_const 2
-
-private lemma contDiff_real_sinh : ContDiff ℝ ⊤ Real.sinh := by
-  have h : Real.sinh = fun x => (Real.exp x - Real.exp (-x)) / 2 := by
-    ext x; rw [Real.sinh_eq]
-  rw [h]
-  exact (Real.contDiff_exp.sub (Real.contDiff_exp.comp (ContDiff.neg contDiff_id))).div_const 2
-
 /-!
-
 ## A. The initial conditions
 
 The initial conditions specify the position `x₀` and the velocity `v₀` at time `t = 0`.
