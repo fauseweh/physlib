@@ -235,11 +235,7 @@ the time derivatives of the energies.
 
 -/
 
-<<<<<<< HEAD
-/-- The kinetic energy of the damped harmonic oscillator. -/
-noncomputable def kineticEnergy (x : Time → ℝ) : Time → ℝ :=
-  fun t => (1 / 2 : ℝ) * S.m * ((Time.deriv x) t)^2
-=======
+
 set_option backward.isDefEq.respectTransparency false in
 lemma kineticEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
     ∂ₜ (kineticEnergy S xₜ) = fun t => ⟪∂ₜ xₜ t, S.m • ∂ₜ (∂ₜ xₜ) t⟫_ℝ := by
@@ -258,7 +254,6 @@ lemma kineticEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : Con
   simp only [smul_add]
   module
   repeat fun_prop
->>>>>>> ff46356319c3ecf898305e490fedc2149242b27a
 
 set_option backward.isDefEq.respectTransparency false in
 lemma potentialEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
@@ -284,46 +279,11 @@ lemma potentialEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : C
   rw [contDiff_infty_iff_fderiv] at hx
   exact hx.1
 
-<<<<<<< HEAD
-/-- Mechanical energy of the damped harmonic oscillator. -/
-noncomputable def energy (x : Time → ℝ) : Time → ℝ :=
-  S.kineticEnergy x + S.potentialEnergy x
-
-/-- Equalties for energy eqns -/
-lemma kineticEnergy_eq (x: Time → ℝ) :
-    kineticEnergy S x = fun t => (1 / 2 : ℝ) * S.m * (Time.deriv x t)^2 := by rfl
-
-lemma potentialEnergy_eq (x: Time → ℝ) :
-    potentialEnergy S x = fun t => (1 / 2 : ℝ) * S.k * (x t)^2 := by rfl
-
-/-- Energy dissipation rate along a trajectory `x : Time → ℝ`.
-
-  if `x` satisfies `S.equationOfMotion x`, then
-
-  Time.deriv (S.energy x) t = - S.γ * (Time.deriv x t)^2,
-
-so the energy is non-increasing and not conserved when `S.γ > 0`. -/
-noncomputable def energyDissipationRate (x : Time → ℝ) : Time → ℝ :=
-  fun t => - S.γ * (Time.deriv x t)^2
-
-/-- Derives the energy dissipation rate from the equation of motion -/
-lemma energy_dissipation_rate (x: Time → ℝ) (h1 : S.EquationOfMotion x)
-    (hx : ContDiff ℝ ∞ x) :
-    Time.deriv (S.energy x) t = - S.γ * (Time.deriv x t)^2 := by
-
-  -- Rearrange Equation of Motion
-  have heom' : S.m * Time.deriv (Time.deriv x) t + S.k * x t =
-              - S.γ * Time.deriv x t := by linarith [h1 t]
-
-  -- Break equation apart
-  rw [energy, kineticEnergy_eq, potentialEnergy_eq]
-=======
 set_option backward.isDefEq.respectTransparency false in
 lemma energy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
     ∂ₜ (energy S xₜ) = fun t => ⟪∂ₜ xₜ t, S.m • ∂ₜ (∂ₜ xₜ) t + S.k • xₜ t⟫_ℝ := by
   unfold energy
   funext t
->>>>>>> ff46356319c3ecf898305e490fedc2149242b27a
   rw [Time.deriv_eq]
   rw [fderiv_fun_add (by fun_prop) (by apply S.potentialEnergy_differentiable xₜ hx)]
   simp only [ContinuousLinearMap.add_apply]
