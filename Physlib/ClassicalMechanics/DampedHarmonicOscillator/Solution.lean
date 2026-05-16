@@ -63,27 +63,9 @@ by the sign of β² - ω₀²:
   - B.2. Overdamped: the auxiliary rate β₁
 - C. Trajectories
   - C.1. Underdamped trajectory
-    - C.1.1. Definition
-    - C.1.2. Smoothness
-    - C.1.3. Velocity
-    - C.1.4. Acceleration
-    - C.1.5. Initial conditions recovery
-    - C.1.6. Equation of motion
   - C.2. Critically damped trajectory
-    - C.2.1. Definition
-    - C.2.2. Smoothness
-    - C.2.3. Velocity
-    - C.2.4. Acceleration
-    - C.2.5. Initial conditions recovery
-    - C.2.6. Equation of motion
   - C.3. Overdamped trajectory
-    - C.3.1. Definition
-    - C.3.2. Smoothness
-    - C.3.3. Velocity
-    - C.3.4. Acceleration
-    - C.3.5. Initial conditions recovery
-    - C.3.6. Equation of motion
-- D. Uniqueness (TODO stubs)
+- D. Uniqueness
   - D.1. Underdamped uniqueness
   - D.2. Critically damped uniqueness
   - D.3. Overdamped uniqueness
@@ -117,13 +99,13 @@ private lemma contDiff_real_cosh : ContDiff ℝ ⊤ Real.cosh := by
   have h : Real.cosh = fun x => (Real.exp x + Real.exp (-x)) / 2 := by
     ext x; rw [Real.cosh_eq]
   rw [h]
-  exact (Real.contDiff_exp.add (Real.contDiff_exp.comp (ContDiff.neg contDiff_id))).div_const 2
+  fun_prop
 
 private lemma contDiff_real_sinh : ContDiff ℝ ⊤ Real.sinh := by
   have h : Real.sinh = fun x => (Real.exp x - Real.exp (-x)) / 2 := by
     ext x; rw [Real.sinh_eq]
   rw [h]
-  exact (Real.contDiff_exp.sub (Real.contDiff_exp.comp (ContDiff.neg contDiff_id))).div_const 2
+  fun_prop
 
 /-!
 
@@ -141,27 +123,13 @@ The initial conditions specify the position `x₀` and the velocity `v₀` at ti
 
 /-- Initial conditions for the damped harmonic oscillator:
   an initial position `x₀ : ℝ` and an initial velocity `v₀ : ℝ`. -/
-structure InitialConditions where
-  /-- The initial position of the oscillator at `t = 0`. -/
-  x₀ : ℝ
-  /-- The initial velocity of the oscillator at `t = 0`. -/
-  v₀ : ℝ
+@[ext] structure InitialConditions where
+  /-- The initial position of the harmonic oscillator. -/
+  x₀ : EuclideanSpace ℝ (Fin 1)
+  /-- The initial velocity of the harmonic oscillator. -/
+  v₀ : EuclideanSpace ℝ (Fin 1)
 
 /-!
-
-#### A.1.1. Extensionality lemma
-
-Two sets of initial conditions are equal if and only if their positions and velocities agree.
-
--/
-
-@[ext]
-lemma InitialConditions.ext {IC₁ IC₂ : InitialConditions}
-    (hx : IC₁.x₀ = IC₂.x₀) (hv : IC₁.v₀ = IC₂.v₀) : IC₁ = IC₂ := by
-  cases IC₁; cases IC₂; simp_all
-
-/-!
-
 ### A.2. The zero initial conditions
 
 -/
@@ -208,23 +176,27 @@ is the frequency of oscillation of the damped solution.
 noncomputable def ω₁ (hS : S.IsUnderdamped) : ℝ :=
   √(S.ω₀ ^ 2 - S.β ^ 2)
 
+
 /-- The damped angular frequency ω₁ is positive in the underdamped case. -/
 lemma ω₁_pos (hS : S.IsUnderdamped) : 0 < S.ω₁ hS := by
-  apply Real.sqrt_pos.mpr
-  have := S.discriminant_eq
-  unfold IsUnderdamped at hS
-  nlinarith [S.m_pos]
+  unfold ω₁
+  suffices h' : 0 < S.ω₀ ^ 2 - S.β ^ 2 by positivity
+  suffices h2' : 0 > 4 * S.m ^ 2 * (S.β ^ 2 - S.ω₀ ^ 2) by nlinarith
+  rw [← S.discriminant_eq]
+  exact hS
 
 /-- The square of ω₁ equals ω₀² − β². -/
 lemma ω₁_sq (hS : S.IsUnderdamped) : S.ω₁ hS ^ 2 = S.ω₀ ^ 2 - S.β ^ 2 := by
-  apply Real.sq_sqrt
-  have := S.discriminant_eq
-  simp only [IsUnderdamped] at hS
-  nlinarith [S.m_pos]
+  unfold ω₁
+  rw [Real.sq_sqrt]
+  suffices h2' : 0 > 4 * S.m ^ 2 * (S.β ^ 2 - S.ω₀ ^ 2) by nlinarith
+  rw [← S.discriminant_eq]
+  exact hS
 
-/-- ω₁ is non-zero in the underdamped case. -/
-lemma ω₁_ne_zero (hS : S.IsUnderdamped) : S.ω₁ hS ≠ 0 :=
-  Ne.symm (ne_of_lt (S.ω₁_pos hS))
+--/-- ω₁ is non-zero in the underdamped case. -/
+--lemma ω₁_ne_zero (hS : S.IsUnderdamped) : S.ω₁ hS ≠ 0 :=
+--  Ne.symm (ne_of_lt (S.ω₁_pos hS))
+--
 
 /-!
 
@@ -284,43 +256,32 @@ where c = v₀ + β x₀.
 
 -/
 
-/-!
-
-#### C.1.1. Definition
-
--/
-
 /-- The solution trajectory for the underdamped damped harmonic oscillator.
 
   Given initial conditions `IC`, the solution is
       x(t) = exp(−β t) · (x₀ · cos(ω₁ t) + (v₀ + β x₀)/ω₁ · sin(ω₁ t)). -/
-noncomputable def trajectoryUnderdamped (hS : S.IsUnderdamped) : Time → ℝ := fun (t : Time) =>
-  Real.exp (- S.β * ↑t) *
-    (IC.x₀ * cos (S.ω₁ hS * ↑t) +
-     (IC.v₀ + S.β * IC.x₀) / S.ω₁ hS * sin (S.ω₁ hS * ↑t))
+
+noncomputable def trajectoryUnderdamped (hS : S.IsUnderdamped) : Time → EuclideanSpace ℝ (Fin 1)
+  := fun (t : Time) =>
+  Real.exp (- S.β * t) • (cos (S.ω₁ hS * t) • IC.x₀  +
+    (sin (S.ω₁ hS * t) / S.ω₁ hS) • (IC.v₀ + S.β • IC.x₀))
 
 lemma trajectoryUnderdamped_eq (hS : S.IsUnderdamped) :
     IC.trajectoryUnderdamped S hS =
-    fun (t : Time) => Real.exp (- S.β * ↑t) *
-      (IC.x₀ * cos (S.ω₁ hS * ↑t) +
-       (IC.v₀ + S.β * IC.x₀) / S.ω₁ hS * sin (S.ω₁ hS * ↑t)) := rfl
+    fun (t : Time) => Real.exp (- S.β * t) • (cos (S.ω₁ hS * t) • IC.x₀  +
+    (sin (S.ω₁ hS * t) / S.ω₁ hS) • (IC.v₀ + S.β • IC.x₀)) := rfl
 
 /-!
 
-#### C.1.2. Smoothness
+# Smoothness
 
 -/
-
 @[fun_prop]
 lemma trajectoryUnderdamped_contDiff (hS : S.IsUnderdamped) :
     ContDiff ℝ ∞ (IC.trajectoryUnderdamped S hS) := by
-  rw [trajectoryUnderdamped_eq]
-  have hval : ContDiff ℝ ∞ (Time.val : Time → ℝ) := Time.toRealCLM.contDiff
-  apply ContDiff.mul
-  · exact Real.contDiff_exp.comp (ContDiff.mul contDiff_const hval)
-  · apply ContDiff.add
-    · exact ContDiff.mul contDiff_const (Real.contDiff_cos.comp (ContDiff.mul contDiff_const hval))
-    · exact ContDiff.mul contDiff_const (Real.contDiff_sin.comp (ContDiff.mul contDiff_const hval))
+    rw [trajectoryUnderdamped_eq]
+    have hval : ContDiff ℝ ∞ (Time.val : Time → ℝ) := Time.toRealCLM.contDiff
+    fun_prop [Time.toRealCLM.contDiff]
 
 /-!
 
@@ -332,10 +293,19 @@ lemma trajectoryUnderdamped_contDiff (hS : S.IsUnderdamped) :
 
     ẋ(t) = e^(−β t) · (v₀ · cos(ω₁ t) − (ω₀² x₀ + β v₀)/ω₁ · sin(ω₁ t)). -/
 lemma trajectoryUnderdamped_velocity (hS : S.IsUnderdamped) :
-    ∂ₜ (IC.trajectoryUnderdamped S hS) = fun (t : Time) =>
-      Real.exp (- S.β * ↑t) *
-        (IC.v₀ * cos (S.ω₁ hS * ↑t) -
-         (S.ω₀ ^ 2 * IC.x₀ + S.β * IC.v₀) / S.ω₁ hS * sin (S.ω₁ hS * ↑t)) := by
+  ∂ₜ (IC.trajectoryUnderdamped S hS) = fun (t : Time) =>
+     Real.exp (- S.β * ↑t) • (cos (S.ω₁ hS * ↑t) • IC.v₀ -
+      (sin (S.ω₁ hS * ↑t) / (S.ω₁ hS)) • (S.ω₀ ^ 2 • IC.x₀ + S.β • IC.v₀)) := by
+  unfold trajectoryUnderdamped
+  funext t
+  rw [Time.deriv]
+
+
+
+
+
+
+
   sorry
 
 /-!
