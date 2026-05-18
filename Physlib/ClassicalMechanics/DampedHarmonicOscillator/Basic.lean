@@ -235,6 +235,7 @@ the time derivatives of the energies.
 
 -/
 
+
 set_option backward.isDefEq.respectTransparency false in
 lemma kineticEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
     ∂ₜ (kineticEnergy S xₜ) = fun t => ⟪∂ₜ xₜ t, S.m • ∂ₜ (∂ₜ xₜ) t⟫_ℝ := by
