@@ -369,7 +369,11 @@ lemma trajectoryUnderdamped_equationOfMotion (hS : S.IsUnderdamped) :
   have hx := congr_fun (IC.trajectoryUnderdamped_eq S hS) t
   simp only at hv ha hx
   rw [hv, ha, hx, hβ, hkm]
-  field_simp [S.ω₁_ne_zero hS]
+  ext i; fin_cases i
+  have hω₀ : S.ω₀ ^ 2 = S.ω₁ hS ^ 2 + S.β ^ 2 := by linarith [S.ω₁_sq hS]
+  simp
+  rw [hω₀]
+  field_simp [(S.ω₁_pos hS).ne']
   ring
 
 /-!
