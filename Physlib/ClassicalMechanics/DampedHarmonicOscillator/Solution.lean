@@ -396,12 +396,13 @@ where c = v₀ + β x₀.
 
   Given initial conditions `IC`, the solution is
       x(t) = exp(−β t) · (x₀ + (v₀ + β x₀) · t). -/
-noncomputable def trajectoryCritical (hS : S.IsCriticallyDamped) : Time → ℝ := fun (t : Time) =>
-  Real.exp (- S.β * ↑t) * (IC.x₀ + (IC.v₀ + S.β * IC.x₀) * ↑t)
+noncomputable def trajectoryCritical (hS : S.IsCriticallyDamped) :
+Time → EuclideanSpace ℝ (Fin 1) := fun (t : Time) =>
+  Real.exp (- S.β • t) • (IC.x₀ + t.val • (IC.v₀ + S.β • IC.x₀) )
 
 lemma trajectoryCritical_eq (hS : S.IsCriticallyDamped) :
     IC.trajectoryCritical S hS =
-    fun (t : Time) => Real.exp (- S.β * ↑t) * (IC.x₀ + (IC.v₀ + S.β * IC.x₀) * ↑t) := rfl
+    fun (t : Time) => Real.exp (- S.β • t) • (IC.x₀ + t.val • (IC.v₀ + S.β • IC.x₀) ) := rfl
 
 /-!
 
@@ -414,9 +415,7 @@ lemma trajectoryCritical_contDiff (hS : S.IsCriticallyDamped) :
     ContDiff ℝ ∞ (IC.trajectoryCritical S hS) := by
   rw [trajectoryCritical_eq]
   have hval : ContDiff ℝ ∞ (Time.val : Time → ℝ) := Time.toRealCLM.contDiff
-  apply ContDiff.mul
-  · exact Real.contDiff_exp.comp (ContDiff.mul contDiff_const hval)
-  · exact ContDiff.add contDiff_const (ContDiff.mul contDiff_const hval)
+  fun_prop [Time.toRealCLM.contDiff]
 
 /-!
 
@@ -430,8 +429,16 @@ lemma trajectoryCritical_contDiff (hS : S.IsCriticallyDamped) :
          = e^(−β t) · (v₀ + c (1 − β t))    where c = v₀ + β x₀. -/
 lemma trajectoryCritical_velocity (hS : S.IsCriticallyDamped) :
     ∂ₜ (IC.trajectoryCritical S hS) = fun (t : Time) =>
-      Real.exp (- S.β * ↑t) * (IC.v₀ - S.β * (IC.v₀ + S.β * IC.x₀) * ↑t) := by
-  sorry
+      Real.exp (- S.β * ↑t) • (IC.v₀ - (t.val * S.β) • (IC.v₀ + S.β • IC.x₀) ) := by
+  unfold trajectoryCritical
+  funext t
+  rw [Time.deriv]
+  simp (disch := fun_prop)
+    only [fderiv_fun_smul, fderiv_fun_add, fderiv_fun_const,
+          fderiv_exp]
+  ext i; fin_cases i
+  simp
+  ring
 
 /-!
 
@@ -444,9 +451,16 @@ lemma trajectoryCritical_velocity (hS : S.IsCriticallyDamped) :
     ẍ(t) = e^(−β t) · (β² c t − 2β v₀ − β² x₀),   where c = v₀ + β x₀. -/
 lemma trajectoryCritical_acceleration (hS : S.IsCriticallyDamped) :
     ∂ₜ (∂ₜ (IC.trajectoryCritical S hS)) = fun (t : Time) =>
-      Real.exp (- S.β * ↑t) *
-        (S.β ^ 2 * (IC.v₀ + S.β * IC.x₀) * ↑t - 2 * S.β * IC.v₀ - S.β ^ 2 * IC.x₀) := by
-  sorry
+      Real.exp (- S.β * ↑t) •
+        (S.β ^ 2 • t.val •(IC.v₀ + S.β • IC.x₀)  - (2 : ℝ) • S.β • IC.v₀ - S.β ^ 2 • IC.x₀) := by
+  rw [show ∂ₜ (IC.trajectoryCritical S hS) = _ from IC.trajectoryCritical_velocity S hS]
+  funext t
+  rw [Time.deriv]
+  simp (disch := fun_prop) only [fderiv_fun_smul, fderiv_fun_add, fderiv_fun_const,
+         fderiv_exp, fderiv_fun_mul, fderiv_fun_neg, fderiv_fun_sub]
+  ext i; fin_cases i
+  simp
+  ring
 
 /-!
 
@@ -488,7 +502,10 @@ lemma trajectoryCritical_equationOfMotion (hS : S.IsCriticallyDamped) :
   have hx := congr_fun (IC.trajectoryCritical_eq S hS) t
   simp only at hv ha hx
   rw [hv, ha, hx, hβ, hkm]
+  ext i; fin_cases i
+  simp
   ring
+
 
 /-!
 
@@ -510,16 +527,16 @@ where c = v₀ + β x₀.
 
   Given initial conditions `IC`, the solution is
       x(t) = exp(−β t) · (x₀ · cosh(β₁ t) + (v₀ + β x₀)/β₁ · sinh(β₁ t)). -/
-noncomputable def trajectoryOverdamped (hS : S.IsOverdamped) : Time → ℝ := fun (t : Time) =>
-  Real.exp (- S.β * ↑t) *
-    (IC.x₀ * Real.cosh (S.β₁ hS * ↑t) +
-     (IC.v₀ + S.β * IC.x₀) / S.β₁ hS * Real.sinh (S.β₁ hS * ↑t))
+noncomputable def trajectoryOverdamped (hS : S.IsOverdamped) : Time → EuclideanSpace ℝ (Fin 1) := fun (t : Time) =>
+  Real.exp (- S.β * ↑t) •
+    (Real.cosh (S.β₁ hS * ↑t) • IC.x₀  +
+     (S.β₁ hS)⁻¹ • Real.sinh (S.β₁ hS * ↑t) • (IC.v₀ + S.β • IC.x₀) )
 
 lemma trajectoryOverdamped_eq (hS : S.IsOverdamped) :
     IC.trajectoryOverdamped S hS =
-    fun (t : Time) => Real.exp (- S.β * ↑t) *
-      (IC.x₀ * Real.cosh (S.β₁ hS * ↑t) +
-       (IC.v₀ + S.β * IC.x₀) / S.β₁ hS * Real.sinh (S.β₁ hS * ↑t)) := rfl
+    fun (t : Time) => Real.exp (- S.β * ↑t) •
+    (Real.cosh (S.β₁ hS * ↑t) • IC.x₀  +
+     (S.β₁ hS)⁻¹ • Real.sinh (S.β₁ hS * ↑t) • (IC.v₀ + S.β • IC.x₀) ) := rfl
 
 /-!
 
@@ -532,26 +549,7 @@ lemma trajectoryOverdamped_contDiff (hS : S.IsOverdamped) :
     ContDiff ℝ ∞ (IC.trajectoryOverdamped S hS) := by
   rw [trajectoryOverdamped_eq]
   have hval : ContDiff ℝ ∞ (Time.val : Time → ℝ) := Time.toRealCLM.contDiff
-  have hlin : ContDiff ℝ ∞ (fun t : Time => S.β₁ hS * t.val) :=
-    ContDiff.mul contDiff_const hval
-  have hcosh : ContDiff ℝ ∞ (fun t : Time => Real.cosh (S.β₁ hS * t.val)) := by
-    have : (fun t : Time => Real.cosh (S.β₁ hS * t.val)) =
-        (fun t : Time => (Real.exp (S.β₁ hS * t.val) + Real.exp (-(S.β₁ hS * t.val))) / 2) := by
-      ext t; rw [Real.cosh_eq]
-    rw [this]
-    exact ((Real.contDiff_exp.comp hlin).add
-           (Real.contDiff_exp.comp (ContDiff.neg hlin))).div_const 2
-  have hsinh : ContDiff ℝ ∞ (fun t : Time => Real.sinh (S.β₁ hS * t.val)) := by
-    have : (fun t : Time => Real.sinh (S.β₁ hS * t.val)) =
-        (fun t : Time => (Real.exp (S.β₁ hS * t.val) - Real.exp (-(S.β₁ hS * t.val))) / 2) := by
-      ext t; rw [Real.sinh_eq]
-    rw [this]
-    exact ((Real.contDiff_exp.comp hlin).sub
-           (Real.contDiff_exp.comp (ContDiff.neg hlin))).div_const 2
-  apply ContDiff.mul
-  · exact Real.contDiff_exp.comp (ContDiff.mul contDiff_const hval)
-  · exact ContDiff.add (ContDiff.mul contDiff_const hcosh) (ContDiff.mul contDiff_const hsinh)
-
+  fun_prop [Time.toRealCLM.contDiff]
 /-!
 
 #### C.3.3. Velocity
@@ -563,10 +561,23 @@ lemma trajectoryOverdamped_contDiff (hS : S.IsOverdamped) :
     ẋ(t) = e^(−β t) · (v₀ · cosh(β₁ t) − (ω₀² x₀ + β v₀)/β₁ · sinh(β₁ t)). -/
 lemma trajectoryOverdamped_velocity (hS : S.IsOverdamped) :
     ∂ₜ (IC.trajectoryOverdamped S hS) = fun (t : Time) =>
-      Real.exp (- S.β * ↑t) *
-        (IC.v₀ * Real.cosh (S.β₁ hS * ↑t) -
-         (S.ω₀ ^ 2 * IC.x₀ + S.β * IC.v₀) / S.β₁ hS * Real.sinh (S.β₁ hS * ↑t)) := by
-  sorry
+      Real.exp (- S.β * ↑t) •
+        (Real.cosh (S.β₁ hS * ↑t) • IC.v₀  -
+         (S.β₁ hS)⁻¹ • Real.sinh (S.β₁ hS * ↑t) • (S.ω₀ ^ 2 • IC.x₀ + S.β • IC.v₀) ) := by
+  unfold trajectoryOverdamped
+  funext t
+  rw [Time.deriv]
+  simp (disch := fun_prop)
+    only [fderiv_fun_smul, fderiv_fun_add, fderiv_fun_const,  fderiv_cosh, fderiv_sinh,
+          fderiv_exp, fderiv_fun_mul]
+  ext i; fin_cases i
+  have hω₀ : S.ω₀ ^ 2 =  S.β ^ 2 - S.β₁ hS ^ 2 := by linarith [S.β₁_sq hS]
+  simp
+  rw [hω₀]
+  field_simp [(S.β₁_pos hS).ne']
+  ring
+
+
 
 /-!
 
