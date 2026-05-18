@@ -264,12 +264,12 @@ where c = v₀ + β x₀.
 noncomputable def trajectoryUnderdamped (hS : S.IsUnderdamped) : Time → EuclideanSpace ℝ (Fin 1)
   := fun (t : Time) =>
   Real.exp (- S.β * t) • (cos (S.ω₁ hS * t) • IC.x₀  +
-    (sin (S.ω₁ hS * t) / S.ω₁ hS) • (IC.v₀ + S.β • IC.x₀))
+    (sin (S.ω₁ hS * t) •  (1 / S.ω₁ hS )) • (IC.v₀ + S.β • IC.x₀))
 
 lemma trajectoryUnderdamped_eq (hS : S.IsUnderdamped) :
     IC.trajectoryUnderdamped S hS =
     fun (t : Time) => Real.exp (- S.β * t) • (cos (S.ω₁ hS * t) • IC.x₀  +
-    (sin (S.ω₁ hS * t) / S.ω₁ hS) • (IC.v₀ + S.β • IC.x₀)) := rfl
+    (sin (S.ω₁ hS * t) • (1 / S.ω₁ hS )) • (IC.v₀ + S.β • IC.x₀)) := rfl
 
 /-!
 
@@ -294,19 +294,22 @@ lemma trajectoryUnderdamped_contDiff (hS : S.IsUnderdamped) :
     ẋ(t) = e^(−β t) · (v₀ · cos(ω₁ t) − (ω₀² x₀ + β v₀)/ω₁ · sin(ω₁ t)). -/
 lemma trajectoryUnderdamped_velocity (hS : S.IsUnderdamped) :
   ∂ₜ (IC.trajectoryUnderdamped S hS) = fun (t : Time) =>
-     Real.exp (- S.β * ↑t) • (cos (S.ω₁ hS * ↑t) • IC.v₀ -
-      (sin (S.ω₁ hS * ↑t) / (S.ω₁ hS)) • (S.ω₀ ^ 2 • IC.x₀ + S.β • IC.v₀)) := by
+     (Real.exp (- S.β * t.val) • cos (S.ω₁ hS * t.val) • IC.v₀)
+     + ((-Real.exp (- S.β * t.val) • S.ω₀ ^ 2 • sin (S.ω₁ hS * t.val) / (S.ω₁ hS)) • IC.x₀)
+     + ((-Real.exp (- S.β * t.val) • S.β • sin (S.ω₁ hS * t.val) / (S.ω₁ hS)) • IC.v₀)
+      := by
   unfold trajectoryUnderdamped
   funext t
   rw [Time.deriv]
-
-
-
-
-
-
-
-  sorry
+  simp (disch := fun_prop)
+    only [fderiv_fun_smul, fderiv_fun_add, fderiv_fun_const,  fderiv_cos, fderiv_sin,
+          fderiv_exp, fderiv_fun_mul]
+  ext i; fin_cases i
+  have hω₀ : S.ω₀ ^ 2 = S.ω₁ hS ^ 2 + S.β ^ 2 := by linarith [S.ω₁_sq hS]
+  simp
+  rw [hω₀]
+  field_simp [(S.ω₁_pos hS).ne']
+  ring
 
 /-!
 
@@ -314,17 +317,34 @@ lemma trajectoryUnderdamped_velocity (hS : S.IsUnderdamped) :
 
 -/
 
+@[simp]
+lemma fderiv_fun_div_const {α : Type*} [NormedAddCommGroup α] [NormedSpace ℝ α]
+    {f : α → ℝ} (hf : Differentiable ℝ f) (c : ℝ) :
+    fderiv ℝ (fun x => f x / c) = fun x => c⁻¹ • fderiv ℝ f x := by
+  funext x
+  have : (fun y => f y / c) = (fun y => c⁻¹ * f y) := by ext; ring
+  rw [this, fderiv_const_mul hf.differentiableAt]
+
 /-- The acceleration of the underdamped trajectory.
 
     ẍ(t) = e^(−β t) · (−(ω₀² x₀ + 2β v₀) · cos(ω₁ t)
              + (β ω₀² x₀ + v₀ (2β²−ω₀²))/ω₁ · sin(ω₁ t)). -/
 lemma trajectoryUnderdamped_acceleration (hS : S.IsUnderdamped) :
     ∂ₜ (∂ₜ (IC.trajectoryUnderdamped S hS)) = fun (t : Time) =>
-      Real.exp (- S.β * ↑t) *
-        ((-(S.ω₀ ^ 2 * IC.x₀) - 2 * S.β * IC.v₀) * cos (S.ω₁ hS * ↑t) +
-         (S.β * S.ω₀ ^ 2 * IC.x₀ + IC.v₀ * (2 * S.β ^ 2 - S.ω₀ ^ 2)) / S.ω₁ hS *
-           sin (S.ω₁ hS * ↑t)) := by
-  sorry
+     (1 / (S.ω₁ hS)) • Real.exp (- S.β * ↑t) •
+        ((-(S.ω₁ hS * S.ω₀ ^ 2 * cos (S.ω₁ hS * ↑t)) + S.β * S.ω₀ ^ 2 * sin (S.ω₁ hS * ↑t)) • IC.x₀ +
+         (-2 * S.β * S.ω₁ hS * cos (S.ω₁ hS * ↑t) + (2 * S.β ^ 2 - S.ω₀ ^ 2) * sin (S.ω₁ hS * ↑t)) • IC.v₀) := by
+  rw [show ∂ₜ (IC.trajectoryUnderdamped S hS) = _ from IC.trajectoryUnderdamped_velocity S hS]
+  funext t
+  rw [Time.deriv]
+  simp (disch := fun_prop) only [fderiv_fun_smul, fderiv_fun_add, fderiv_fun_const,  fderiv_cos, fderiv_sin,
+         fderiv_exp, fderiv_fun_mul, fderiv_fun_neg, fderiv_fun_div_const]
+  ext i; fin_cases i
+  have hω₀ : S.ω₀ ^ 2 = S.ω₁ hS ^ 2 + S.β ^ 2 := by linarith [S.ω₁_sq hS]
+  simp
+  rw [hω₀]
+  field_simp [(S.ω₁_pos hS).ne']
+  ring
 
 /-!
 
