@@ -591,12 +591,21 @@ lemma trajectoryOverdamped_velocity (hS : S.IsOverdamped) :
              + ((2β²−ω₀²) v₀ + β ω₀² x₀)/β₁ · sinh(β₁ t)). -/
 lemma trajectoryOverdamped_acceleration (hS : S.IsOverdamped) :
     ∂ₜ (∂ₜ (IC.trajectoryOverdamped S hS)) = fun (t : Time) =>
-      Real.exp (- S.β * ↑t) *
-        ((-(S.ω₀ ^ 2 * IC.x₀) - 2 * S.β * IC.v₀) * Real.cosh (S.β₁ hS * ↑t) +
-         ((2 * S.β ^ 2 - S.ω₀ ^ 2) * IC.v₀ + S.β * S.ω₀ ^ 2 * IC.x₀) / S.β₁ hS *
-           Real.sinh (S.β₁ hS * ↑t)) := by
-  sorry
-
+      Real.exp (- S.β * ↑t) •
+        (Real.cosh (S.β₁ hS * ↑t) • (-(S.ω₀ ^ 2 • IC.x₀) - (2 * S.β) • IC.v₀) +
+         (S.β₁ hS)⁻¹ • Real.sinh (S.β₁ hS * ↑t) •
+           ((2 * S.β ^ 2 - S.ω₀ ^ 2) • IC.v₀ + (S.β * S.ω₀ ^ 2) • IC.x₀)) := by
+  rw [show ∂ₜ (IC.trajectoryOverdamped S hS) = _ from IC.trajectoryOverdamped_velocity S hS]
+  funext t
+  rw [Time.deriv]
+  simp (disch := fun_prop) only [fderiv_fun_smul, fderiv_fun_sub, fderiv_fun_const,  fderiv_cosh, fderiv_sinh,
+         fderiv_exp, fderiv_fun_mul, fderiv_fun_neg, fderiv_fun_div_const]
+  ext i; fin_cases i
+  have hω₀ : S.ω₀ ^ 2 =  S.β ^ 2 - S.β₁ hS ^ 2 := by linarith [S.β₁_sq hS]
+  simp
+  rw [hω₀]
+  field_simp [(S.β₁_pos hS).ne']
+  ring
 /-!
 
 #### C.3.5. Initial conditions recovery
@@ -635,6 +644,8 @@ lemma trajectoryOverdamped_equationOfMotion (hS : S.IsOverdamped) :
   simp only at hv ha hx
   rw [hv, ha, hx, hβ, hkm]
   field_simp [S.β₁_ne_zero hS]
+  ext i; fin_cases i
+  simp
   ring
 
 /-!
