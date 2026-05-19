@@ -13,7 +13,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.DerivHyp
 
 ## i. Overview
 
-In this module we define the solutions to the damped harmonic oscillator (DHO) for each of the
+In this module we define the solutions to the damped harmonic oscillator for each of the
 three damping regimes, prove that they satisfy the equation of motion, and study their
 energy and special geometric properties.
 
@@ -21,9 +21,9 @@ The equation of motion is
 
     m ẍ + γ ẋ + k x = 0,
 
-where `x : Time → ℝ`, and the solutions are expressed in terms of the two derived quantities
+where `x : Time → EuclideanSpace ℝ (Fin 1)`, and the solutions are expressed in terms of the two derived quantities
 
-    β  := γ / (2 m)       (decay rate / half-damping)
+    β  := γ / (2 m)       (decay rate)
     ω₀ := √(k / m)        (natural angular frequency)
 
 The three cases are determined by the sign of the discriminant γ² - 4mk, or equivalently
@@ -43,7 +43,7 @@ by the sign of β² - ω₀²:
 
 ## ii. Key results
 
-- `InitialConditions`: structure with initial position `x₀ : ℝ` and velocity `v₀ : ℝ`.
+- `InitialConditions`: structure with initial position `x₀ : EuclideanSpace ℝ (Fin 1)` and velocity `v₀ : EuclideanSpace ℝ (Fin 1)`.
 - `trajectoryUnderdamped / trajectoryCritical / trajectoryOverdamped`: the three solution
   families parametrised by `InitialConditions`.
 - `trajectory*_equationOfMotion`: each trajectory satisfies the DHO equation of motion.

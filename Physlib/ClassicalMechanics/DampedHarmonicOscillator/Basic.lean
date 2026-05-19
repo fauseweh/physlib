@@ -71,12 +71,6 @@ open Real
 open Space
 open InnerProductSpace
 
-TODO "Derive solutions for the underdamped case (oscillatory with exponential decay)."
-
-TODO "Derive solutions for the critically damped case (fastest non-oscillatory return)."
-
-TODO "Derive solutions for the overdamped case (slow non-oscillatory return)."
-
 TODO "Define and prove properties of the quality factor Q."
 
 TODO "Define and prove properties of the relaxation time τ."
@@ -138,9 +132,6 @@ noncomputable def ω₀ : ℝ := √(S.k / S.m)
 lemma ω₀_pos : 0 < S.ω₀ := by
   simp [ω₀]
   positivity [S.k_pos, S.m_pos]
-
-
---sqrt_pos.mpr (div_pos S.k_pos S.m_pos)
 
 lemma ω₀_sq : S.ω₀^2 = S.k / S.m := by
   simp [ω₀]
@@ -205,10 +196,8 @@ On smooth trajectories the energies are differentiable.
 lemma kineticEnergy_differentiable (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
     Differentiable ℝ (kineticEnergy S xₜ) := by
   rw [kineticEnergy_eq]
-  change Differentiable ℝ ((fun x => (1 / (2 : ℝ)) * S.m * ⟪x, x⟫_ℝ) ∘ (fun t => ∂ₜ xₜ t))
-  apply Differentiable.comp
-  · fun_prop
-  · exact deriv_differentiable_of_contDiff xₜ hx
+  fun_prop
+
 
 @[fun_prop]
 lemma potentialEnergy_differentiable (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
@@ -236,7 +225,6 @@ the time derivatives of the energies.
 -/
 
 
-set_option backward.isDefEq.respectTransparency false in
 lemma kineticEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
     ∂ₜ (kineticEnergy S xₜ) = fun t => ⟪∂ₜ xₜ t, S.m • ∂ₜ (∂ₜ xₜ) t⟫_ℝ := by
   funext t
@@ -255,7 +243,6 @@ lemma kineticEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : Con
   module
   repeat fun_prop
 
-set_option backward.isDefEq.respectTransparency false in
 lemma potentialEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
     ∂ₜ (fun t => potentialEnergy S (xₜ t)) = fun t => ⟪∂ₜ xₜ t, S.k • xₜ t⟫_ℝ := by
   funext t
@@ -279,7 +266,6 @@ lemma potentialEnergy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : C
   rw [contDiff_infty_iff_fderiv] at hx
   exact hx.1
 
-set_option backward.isDefEq.respectTransparency false in
 lemma energy_deriv (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx : ContDiff ℝ ∞ xₜ) :
     ∂ₜ (energy S xₜ) = fun t => ⟪∂ₜ xₜ t, S.m • ∂ₜ (∂ₜ xₜ) t + S.k • xₜ t⟫_ℝ := by
   unfold energy
