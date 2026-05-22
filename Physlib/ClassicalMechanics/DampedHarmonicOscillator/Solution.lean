@@ -599,7 +599,7 @@ lemma trajectoryOverdamped_acceleration (hS : S.IsOverdamped) :
   funext t
   rw [Time.deriv]
   simp (disch := fun_prop) only [fderiv_fun_smul, fderiv_fun_sub, fderiv_fun_const,  fderiv_cosh, fderiv_sinh,
-         fderiv_exp, fderiv_fun_mul, fderiv_fun_neg, fderiv_fun_div_const]
+         fderiv_exp, fderiv_fun_mul, fderiv_fun_neg]
   ext i; fin_cases i
   have hω₀ : S.ω₀ ^ 2 =  S.β ^ 2 - S.β₁ hS ^ 2 := by linarith [S.β₁_sq hS]
   simp
@@ -695,27 +695,30 @@ in all three damping regimes:
 /-- The initial mechanical energy of the underdamped trajectory. -/
 lemma trajectoryUnderdamped_energy_at_zero (hS : S.IsUnderdamped) :
     S.energy (IC.trajectoryUnderdamped S hS) 0 =
-    1 / 2 * S.m * IC.v₀ ^ 2 + 1 / 2 * S.k * IC.x₀ ^ 2 := by
+     1 / 2 * S.m * ‖IC.v₀‖^2 + 1 / 2 * S.k * ‖IC.x₀‖^2 := by
   unfold energy kineticEnergy potentialEnergy
   simp [IC.trajectoryUnderdamped_at_zero S hS,
         IC.trajectoryUnderdamped_velocity_at_zero S hS]
+  ring
+
 
 /-- The initial mechanical energy of the critically damped trajectory. -/
 lemma trajectoryCritical_energy_at_zero (hS : S.IsCriticallyDamped) :
     S.energy (IC.trajectoryCritical S hS) 0 =
-    1 / 2 * S.m * IC.v₀ ^ 2 + 1 / 2 * S.k * IC.x₀ ^ 2 := by
+     1 / 2 * S.m * ‖IC.v₀‖^2 + 1 / 2 * S.k * ‖IC.x₀‖^2 := by
   unfold energy kineticEnergy potentialEnergy
   simp [IC.trajectoryCritical_at_zero S hS,
         IC.trajectoryCritical_velocity_at_zero S hS]
+  ring
 
 /-- The initial mechanical energy of the overdamped trajectory. -/
 lemma trajectoryOverdamped_energy_at_zero (hS : S.IsOverdamped) :
     S.energy (IC.trajectoryOverdamped S hS) 0 =
-    1 / 2 * S.m * IC.v₀ ^ 2 + 1 / 2 * S.k * IC.x₀ ^ 2 := by
+    1 / 2 * S.m * ‖IC.v₀‖^2 + 1 / 2 * S.k * ‖IC.x₀‖^2 := by
   unfold energy kineticEnergy potentialEnergy
   simp [IC.trajectoryOverdamped_at_zero S hS,
         IC.trajectoryOverdamped_velocity_at_zero S hS]
-
+  ring
 /-!
 
 ### E.2. Non-negativity of energy
@@ -726,14 +729,10 @@ directly from the definitions and positivity of `m` and `k`, independently of th
 -/
 
 /-- The mechanical energy is non-negative at all times. -/
-lemma energy_nonneg (x : Time → ℝ) (t : Time) : 0 ≤ S.energy x t := by
+lemma energy_nonneg (x : Time → EuclideanSpace ℝ (Fin 1) ) (t : Time) : 0 ≤ S.energy x t := by
   unfold energy kineticEnergy potentialEnergy
-  simp only [Pi.add_apply]
-  have hm : 0 ≤ 1 / 2 * S.m * (Time.deriv x t) ^ 2 :=
-    mul_nonneg (mul_nonneg (by norm_num) (le_of_lt S.m_pos)) (sq_nonneg _)
-  have hk : 0 ≤ 1 / 2 * S.k * (x t) ^ 2 :=
-    mul_nonneg (mul_nonneg (by norm_num) (le_of_lt S.k_pos)) (sq_nonneg _)
-  linarith
+  simp only [smul_eq_mul, real_inner_self_eq_norm_sq]
+  positivity [S.m_pos, S.k_pos]
 
 /-!
 
@@ -753,7 +752,7 @@ above by the initial amplitude envelope `A · exp(−β t)`, where
 
 /-- The amplitude constant for the underdamped trajectory. -/
 noncomputable def underdampedAmplitude (hS : S.IsUnderdamped) : ℝ :=
-  √(IC.x₀ ^ 2 + ((IC.v₀ + S.β * IC.x₀) / S.ω₁ hS) ^ 2)
+  √( ‖IC.x₀‖^2 + (1/ S.ω₁ hS)^2 * (  ‖IC.v₀‖^2 + S.β^2 * ‖IC.x₀‖^2 + S.β * 2 * (IC.v₀ 0) * (IC.x₀ 0)) )
 
 /-- The amplitude constant is non-negative. -/
 lemma underdampedAmplitude_nonneg (hS : S.IsUnderdamped) :
@@ -762,19 +761,15 @@ lemma underdampedAmplitude_nonneg (hS : S.IsUnderdamped) :
 
 /-- The underdamped trajectory is bounded in absolute value by `A · exp(−β t)`. -/
 lemma trajectoryUnderdamped_abs_le (hS : S.IsUnderdamped) (t : Time) :
-    |IC.trajectoryUnderdamped S hS t| ≤
+    ‖IC.trajectoryUnderdamped S hS t‖ ≤
     IC.underdampedAmplitude S hS * Real.exp (- S.β * ↑t) := by
-  rw [trajectoryUnderdamped_eq, underdampedAmplitude, abs_mul, Real.abs_exp]
-  rw [mul_comm]  -- rearrange to |...| * exp ≤ sqrt(...) * exp
-  apply mul_le_mul_of_nonneg_right _ (Real.exp_nonneg _)
-  rw [← Real.sqrt_sq_eq_abs]
-  apply Real.sqrt_le_sqrt
-  have hcs := sin_sq_add_cos_sq (S.ω₁ hS * ↑t)
-  nlinarith [sq_nonneg (IC.x₀ * sin (S.ω₁ hS * ↑t) -
-      (IC.v₀ + S.β * IC.x₀) / S.ω₁ hS * cos (S.ω₁ hS * ↑t)),
-    sq_nonneg (IC.x₀ * cos (S.ω₁ hS * ↑t) +
-      (IC.v₀ + S.β * IC.x₀) / S.ω₁ hS * sin (S.ω₁ hS * ↑t)),
-    sq_abs IC.x₀, sq_abs ((IC.v₀ + S.β * IC.x₀) / S.ω₁ hS)]
+  rw [trajectoryUnderdamped_eq, underdampedAmplitude]
+  simp_all
+  ring_nf
+  field_simp
+  rw [← smul_add (Real.exp _), ← smul_add (Real.exp _), norm_smul,
+    Real.norm_of_nonneg (Real.exp_nonneg _)]
+  field_simp
 
 /-!
 
