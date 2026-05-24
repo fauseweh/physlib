@@ -750,6 +750,11 @@ above by the initial amplitude envelope `A · exp(−β t)`, where
 
 -/
 
+example (a b : ℝ) :
+    Inner.inner ℝ a b = a * b := by
+  change b * a = a * b
+  ring
+
 /-- The amplitude constant for the underdamped trajectory. -/
 noncomputable def underdampedAmplitude (hS : S.IsUnderdamped) : ℝ :=
   √( ‖IC.x₀‖^2 + (1/ S.ω₁ hS)^2 * (  ‖IC.v₀‖^2 + S.β^2 * ‖IC.x₀‖^2 + S.β * 2 * (IC.v₀ 0) * (IC.x₀ 0)) )
@@ -759,10 +764,20 @@ lemma underdampedAmplitude_nonneg (hS : S.IsUnderdamped) :
     0 ≤ IC.underdampedAmplitude S hS :=
   Real.sqrt_nonneg _
 
+
 /-- The underdamped trajectory is bounded in absolute value by `A · exp(−β t)`. -/
 lemma trajectoryUnderdamped_abs_le (hS : S.IsUnderdamped) (t : Time) :
     ‖IC.trajectoryUnderdamped S hS t‖ ≤
     IC.underdampedAmplitude S hS * Real.exp (- S.β * ↑t) := by
+
+  --Local lemma we will need
+  have trig_projection_sq_le (θ x y : ℝ) :
+    (Real.cos θ * x + Real.sin θ * y) ^ 2 ≤ x ^ 2 + y ^ 2 := by
+    nlinarith [
+    Real.sin_sq_add_cos_sq θ,
+    sq_nonneg (Real.sin θ * x - Real.cos θ * y)
+  ]
+
   rw [trajectoryUnderdamped_eq, underdampedAmplitude]
   simp_all
   ring_nf
@@ -771,8 +786,80 @@ lemma trajectoryUnderdamped_abs_le (hS : S.IsUnderdamped) (t : Time) :
     Real.norm_of_nonneg (Real.exp_nonneg _)]
   field_simp
 
-/-!
 
+
+  rw [Real.le_sqrt (norm_nonneg _)]
+  simp only [← real_inner_self_eq_norm_sq]
+  simp only [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right]
+  simp only [PiLp.inner_apply, Fin.sum_univ_one]
+  rw [mul_comm (IC.v₀.ofLp 0) (IC.x₀.ofLp 0)]
+  have h1 : Inner.inner ℝ (IC.x₀.ofLp 0) (IC.v₀.ofLp 0) = (IC.x₀.ofLp 0) * (IC.v₀.ofLp 0) := by
+    simpa using (RCLike.inner_apply' (IC.x₀.ofLp 0) (IC.v₀.ofLp 0))
+  have h2 : Inner.inner ℝ (IC.v₀.ofLp 0) (IC.x₀.ofLp 0)  =  (IC.v₀.ofLp 0) * (IC.x₀.ofLp 0) := by
+    simpa using (RCLike.inner_apply' (IC.v₀.ofLp 0) (IC.x₀.ofLp 0))
+  rw [h1, h2]
+  have real_inner_real (x y : ℝ) :
+    Inner.inner ℝ x y = y * x := by
+    change y * star x = y * x
+    simp_all
+  rw [real_inner_real, real_inner_real]
+  ring_nf
+  simp_all
+  set θ : ℝ := t.val * S.ω₁ hS
+  set w : ℝ := S.ω₁ hS
+  set x : ℝ := IC.x₀.ofLp 0
+  set v : ℝ := IC.v₀.ofLp 0
+  set β : ℝ := S.β
+
+  have hw2 : (w ^ 2)⁻¹ = w⁻¹ ^ 2 := by
+    rw [← inv_pow]
+
+  have hproj :
+      (Real.cos θ * x + Real.sin θ * (w⁻¹ * (v + β * x))) ^ 2 ≤ x ^ 2 + (w⁻¹ * (v + β * x)) ^ 2 :=
+    trig_projection_sq_le θ x (w⁻¹ * (v + β * x))
+
+  convert hproj using 1
+  · rw [hw2]
+    ring_nf
+  · rw [hw2]
+    ring_nf
+
+  -- By here second goal: non-negativity due to rw [Real.le_sqrt (norm_nonneg _)] above
+  simp only [← real_inner_self_eq_norm_sq]
+  simp only [PiLp.inner_apply, Fin.sum_univ_one]
+  have real_inner_real (x y : ℝ) :
+    Inner.inner ℝ x y = y * x := by
+    change y * star x = y * x
+    simp_all
+  rw [real_inner_real, real_inner_real]
+  set θ : ℝ := t.val * S.ω₁ hS
+  set w : ℝ := S.ω₁ hS
+  set x : ℝ := IC.x₀.ofLp 0
+  set v : ℝ := IC.v₀.ofLp 0
+  set β : ℝ := S.β
+
+  have hnum :
+      0 ≤ S.β *
+            (IC.v₀.ofLp 0 * IC.x₀.ofLp 0 * 2 +
+              S.β * (IC.x₀.ofLp 0 * IC.x₀.ofLp 0)) +
+          IC.v₀.ofLp 0 * IC.v₀.ofLp 0 := by
+    nlinarith [sq_nonneg (IC.v₀.ofLp 0 + S.β * IC.x₀.ofLp 0)]
+
+  have hfrac :
+      0 ≤
+        (S.β *
+            (IC.v₀.ofLp 0 * IC.x₀.ofLp 0 * 2 +
+              S.β * (IC.x₀.ofLp 0 * IC.x₀.ofLp 0)) +
+          IC.v₀.ofLp 0 * IC.v₀.ofLp 0) /
+          S.ω₁ hS ^ 2 := by
+    exact div_nonneg hnum (sq_nonneg (S.ω₁ hS))
+
+  have hx : 0 ≤ IC.x₀.ofLp 0 * IC.x₀.ofLp 0 := by
+    exact mul_self_nonneg (IC.x₀.ofLp 0)
+
+  nlinarith
+
+/-!
 ### F.2. Critically damped: at most one positive zero
 
 The critically damped trajectory `e^(−β t) (x₀ + c t)` with `c = v₀ + β x₀` has at most
