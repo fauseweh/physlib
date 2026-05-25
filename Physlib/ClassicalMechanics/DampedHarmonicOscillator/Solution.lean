@@ -750,11 +750,6 @@ above by the initial amplitude envelope `A · exp(−β t)`, where
 
 -/
 
-example (a b : ℝ) :
-    Inner.inner ℝ a b = a * b := by
-  change b * a = a * b
-  ring
-
 /-- The amplitude constant for the underdamped trajectory. -/
 noncomputable def underdampedAmplitude (hS : S.IsUnderdamped) : ℝ :=
   √( ‖IC.x₀‖^2 + (1/ S.ω₁ hS)^2 * (  ‖IC.v₀‖^2 + S.β^2 * ‖IC.x₀‖^2 + S.β * 2 * (IC.v₀ 0) * (IC.x₀ 0)) )
