@@ -867,10 +867,12 @@ one positive zero, since the factor `(x₀ + c t)` is linear in `t`.
 
 -/
 
+-- Real.exp (- S.β • t) • (IC.x₀ + t.val • (IC.v₀ + S.β • IC.x₀) )
+
 /-- The critically damped trajectory has at most one positive zero, provided the initial
   conditions are not both zero (in which case the trajectory is identically zero). -/
 lemma trajectoryCritical_at_most_one_zero (hS : S.IsCriticallyDamped)
-    (hIC : IC.x₀ ≠ 0 ∨ IC.v₀ + S.β * IC.x₀ ≠ 0)
+    (hIC : IC.x₀ ≠ 0 ∨ IC.v₀ + S.β • IC.x₀ ≠ 0)
     (t₁ t₂ : Time)
     (h₁ : IC.trajectoryCritical S hS t₁ = 0)
     (h₂ : IC.trajectoryCritical S hS t₂ = 0) : t₁ = t₂ := by
@@ -878,25 +880,28 @@ lemma trajectoryCritical_at_most_one_zero (hS : S.IsCriticallyDamped)
   -- Since exp(−β t) > 0, we must have x₀ + c t = 0
   have hexp₁ : Real.exp (- S.β * ↑t₁) ≠ 0 := Real.exp_ne_zero _
   have hexp₂ : Real.exp (- S.β * ↑t₂) ≠ 0 := Real.exp_ne_zero _
-  have hlin₁ : IC.x₀ + (IC.v₀ + S.β * IC.x₀) * ↑t₁ = 0 := by
-    rcases mul_eq_zero.mp h₁ with habs | h
+  have hlin₁ : IC.x₀ + t₁.val • (  IC.v₀ + S.β • IC.x₀) = 0 := by
+    rcases smul_eq_zero.mp h₁ with habs | h
     · exact absurd habs hexp₁
-    · exact h
-  have hlin₂ : IC.x₀ + (IC.v₀ + S.β * IC.x₀) * ↑t₂ = 0 := by
-    rcases mul_eq_zero.mp h₂ with habs | h
+    · simp only [h]
+  have hlin₂ : IC.x₀ + t₂.val • (IC.v₀ + S.β • IC.x₀) = 0 := by
+    rcases smul_eq_zero.mp h₂ with habs | h
     · exact absurd habs hexp₂
-    · exact h
+    · simp only [h]
   -- Two zeros of a linear function force t₁ = t₂
-  have hc : (IC.v₀ + S.β * IC.x₀) * ((↑t₁ : ℝ) - ↑t₂) = 0 := by nlinarith
-  rcases mul_eq_zero.mp hc with hc0 | htdiff
+  have hc : (t₁.val - t₂.val) • (IC.v₀ + S.β • IC.x₀) = 0 := by
+    have h : t₁.val • (IC.v₀ + S.β • IC.x₀) = t₂.val • (IC.v₀ + S.β • IC.x₀) :=
+      add_left_cancel (hlin₁.trans hlin₂.symm)
+    rw [sub_smul, h, sub_self]
+  rcases smul_eq_zero.mp hc with htdiff | hc0
+  · -- t₁.val = t₂.val
+    exact Time.val_injective (sub_eq_zero.mp htdiff)
   · -- c = 0: then x₀ + 0 = 0, so x₀ = 0; contradicts hIC
     have hx0 : IC.x₀ = 0 := by
-      have := hlin₁; rw [hc0, zero_mul, add_zero] at this; exact this
+      have := hlin₁; rw [hc0, smul_zero, add_zero] at this; exact this
     rcases hIC with hx | hc
     · exact absurd hx0 hx
     · exact absurd hc0 hc
-  · -- t₁.val = t₂.val
-    exact Time.val_injective (sub_eq_zero.mp htdiff)
 
 /-!
 
