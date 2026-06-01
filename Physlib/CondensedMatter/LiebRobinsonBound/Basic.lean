@@ -106,8 +106,7 @@ variable (N : ℕ)
 /-- The many-body Hilbert space of a quantum spin system on the lattice `V` with
 `N`-dimensional single-site Hilbert spaces, realised as the `L²`-space on the set
 of configurations `V → Fin N`. -/
-abbrev TotalHilbertSpace :=
-  EuclideanSpace ℂ (V → Fin N)
+abbrev TotalHilbertSpace := EuclideanSpace ℂ (V → Fin N)
 
 /-!
 
