@@ -1,0 +1,98 @@
+
+Here is the proof idea in its cleanest finite-range form.
+
+Take a graph of bounded degree (\zeta), with Hamiltonian
+
+[
+H=\sum_{\langle u v\rangle} h_{uv},
+\qquad |h_{uv}|\le J,
+]
+
+and let (A) be supported near (x), (B) near (y), with graph distance (r=d(x,y)). Ignore on-site terms; they only rotate local operators and do not spread support.
+
+Use the Dyson expansion
+
+[
+A(t)=e^{iHt}Ae^{-iHt}
+=\sum_{n\ge 0}\frac{(it)^n}{n!}\operatorname{ad}_H^n(A),
+]
+
+where
+
+[
+\operatorname{ad}_H(A)=[H,A].
+]
+
+Now expand the nested commutator:
+
+[
+\operatorname{ad}_H^n(A)
+========================
+
+\sum_{e_1,\dots,e_n}
+\operatorname{ad}*{h*{e_n}}\cdots \operatorname{ad}*{h*{e_1}}(A).
+]
+
+A term contributes to ([A(t),B]) only if the sequence of edges (e_1,\dots,e_n) forms a connected path that starts at (x) and reaches (y). Hence no contribution is possible unless
+
+[
+n\ge r.
+]
+
+Moreover,
+
+[
+|\operatorname{ad}*{h*{e_n}}\cdots \operatorname{ad}*{h*{e_1}}(A)|
+\le (2J)^n|A|.
+]
+
+The number of possible edge-walks of length (n) is bounded by (\zeta^n). Therefore
+
+[
+|[A(t),B]|
+\le
+2|A||B|
+\sum_{n\ge r}
+\frac{(2J\zeta |t|)^n}{n!}.
+]
+
+Now use, for any (\mu>0),
+
+[
+\sum_{n\ge r}\frac{a^n}{n!}
+\le
+e^{-\mu r}\sum_{n\ge0}\frac{(ae^\mu)^n}{n!}
+===========================================
+
+\exp(-\mu r+a e^\mu).
+]
+
+With (a=2J\zeta |t|), this gives
+
+[
+|[A(t),B]|
+\le
+2|A||B|
+\exp!\left[-\mu r+2J\zeta e^\mu |t|\right].
+]
+
+Equivalently,
+
+[
+\boxed{
+|[A(t),B]|
+\le
+2|A||B|
+\exp!\left[-\mu\bigl(d(x,y)-v_\mu |t|\bigr)\right]
+}
+]
+
+with
+
+[
+v_\mu=\frac{2J\zeta e^\mu}{\mu}.
+]
+
+For extended supports (X,Y), one sums over possible starting and ending sites, giving a prefactor such as (|X||Y|), or a sharper boundary-dependent prefactor in refined versions.
+
+The whole proof is: **nested commutators can only grow support one interaction edge at a time; reaching distance (r) requires at least (r) commutators; the Dyson tail beyond order (r) is exponentially small outside a linear light cone.**
