@@ -173,10 +173,9 @@ elementary.
 /-- An operator `A : Operator V N` is *supported on* the finite subset `X ⊆ V`
 when its matrix elements between configurations that disagree somewhere outside
 `X` vanish. -/
-def IsSupportedOn {V : Type*} [Fintype V] [DecidableEq V] {N : ℕ}
-    (X : Finset V) (A : Operator V N) : Prop :=
+def IsSupportedOn (X : Finset V) (A : Operator V N) : Prop :=
   ∀ s t : V → Fin N,
-    (∃ x : V, x ∉ X ∧ s x ≠ t x) → ⟪configState s, A (configState t)⟫_ℂ = 0
+    (∃ x : V, x ∉ X ∧ s x ≠ t x) → ⟪configState V N s, A (configState V N t)⟫_ℂ = 0
 
 /-!
 
@@ -186,12 +185,11 @@ def IsSupportedOn {V : Type*} [Fintype V] [DecidableEq V] {N : ℕ}
 
 /-- A *local observable* supported on a finite subset `X ⊆ V` of lattice sites,
 bundled with the support property. -/
-structure LocalObservable (V : Type*) [Fintype V] [DecidableEq V] (N : ℕ)
-    (X : Finset V) where
+structure LocalObservable (X : Finset V) where
   /-- The underlying operator. -/
   op : Operator V N
   /-- The operator is supported on `X`. -/
-  isSupported : IsSupportedOn X op
+  isSupported : IsSupportedOn V N X op
 
 /-!
 
@@ -208,15 +206,14 @@ range.
 `Φ X` is the local interaction term carried by the finite subset `X ⊆ V`. It is
 required to be self-adjoint and supported on `X`, and to vanish whenever the
 diameter of `X` exceeds the fixed `range`. -/
-structure Interaction (V : Type*) [Fintype V] [DecidableEq V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] (N : ℕ) where
+structure Interaction where
   /-- The map assigning a local operator to each finite subset of `V`. -/
   Φ : Finset V → Operator V N
   /-- A uniform upper bound on the graph-hop diameter of subsets carrying a
   non-zero interaction term. -/
   range : ℕ
   /-- Each term `Φ X` is supported on `X`. -/
-  Φ_supported : ∀ X, IsSupportedOn X (Φ X)
+  Φ_supported : ∀ X, IsSupportedOn V N X (Φ X)
   /-- Each term `Φ X` is self-adjoint. -/
   Φ_selfAdjoint : ∀ X, IsSelfAdjoint (Φ X)
   /-- Subsets containing two sites more than `range` hops apart carry no interaction. -/
